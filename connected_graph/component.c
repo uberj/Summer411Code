@@ -63,7 +63,7 @@ void *_generate_ds(FILE* fp,struct node* nodes)
         // X connected to X
         nodes[a_node].neighbors[a_node] = &nodes[a_node]; // Redundant
         nodes[a_node]._view[a_node] = &nodes[a_node]; // Redundant
-        // Y connected to X
+        // Y connected to X (comment out these lines if you want a directed graph
         nodes[a_edge].neighbors[a_node] = &nodes[a_node];
         nodes[a_edge]._view[a_node] = &nodes[a_node];
         // X connected to Y
