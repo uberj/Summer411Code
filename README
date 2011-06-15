@@ -1,0 +1,50 @@
+Random Graph Problem
+====================
+
+Description: Write a threaded program to compute the number of connected components and the maximum and minimum number of nodes from among the connected subgraphs within an input graph. The command line to your application will contain the name for the input file containing the graph.
+
+Input file description: The file will contain a number of lines containing edges within the graph to be considered. Nodes will be represented by three capital letters in the range 'A' to 'Z'.  An input line will contain six capital letters, the first three being one node and the second three being the other node defining the edge.  End of File (EOF) will signify the end of the graph input.
+
+Output: The total number of connected components within the input graph and the number of nodes found in the largest and smallest connected components are to be printed to stdout. For easy checking, output should be labelled.
+
+
+Command line example: compcalc.exe testgraph.txt
+
+Input file example: testgraph.txt
+
+AAABBB
+RRRTTT
+AAAKKK
+AAAZZZ
+ZZZBBB
+SSSRRR
+TTTSSS
+BBBKKK
+KKKZZZ
+
+
+Output example:
+
+Total number of connected components:   2
+
+Maximum sized connected component:   4
+
+Minmum sized connected componet:   3
+AAAZZZ
+ZZZBBB
+SSSRRR
+TTTSSS
+BBBKKK
+KKKZZZ
+
+USAGE
+-----
+Write your grap in graph.txt
+Compile code:
+    gcc -g component.c
+Run code:
+    ./a.out
+Toggle line 67-68 for directed/undirected graph.
+
+TODO:
+Optimize for multiple cores.
