@@ -37,33 +37,30 @@ int isPrimeDA (int tested, struct DynArr *primes){
 	return div;
 }
 
-int isPrimeDAPara(int tested, struct DynArr *primes){
+void isPrimeDAPara(struct Data *data){
 	int i, prime, div, size;
 	double sqroot;
-	size = primes->size;
-	sqroot = (int)sqrt((double)tested);
+	size = data->primes->size;
+	sqroot = (int)sqrt((double)data->tested);
 	if(size > 0){
 		for(i = 0; i < size; i++){
-                	if((prime = getDynArr(primes, i)) <= sqroot){
-				if(tested % prime == 0) return prime;
+                	if((prime = getDynArr(data->primes, i)) <= sqroot){
+				if(data->tested % prime == 0) pthread_exit(NULL);
 			}
 			else{
-                        	while(primes->lock > 0);
-				primes->lock++;
-				addDynArr(primes, tested);
-				primes->lock--;
-				return tested;
+                        	while(data->primes->lock > 0);
+				data->primes->lock++;
+				addDynArr(data->primes, data->tested);
+				data->primes->lock--;
+				pthread_exit(NULL);
 			}
 		}
 	}
-        else if((div = isPrime(tested)) == tested){
-        	while(primes->lock > 0);
-	        primes->lock++;
-		addDynArr(primes, tested);
-		primes->lock--;
+        else if((div = isPrime(data->tested)) == data->tested){
+        	while(data->primes->lock > 0);
+	        data->primes->lock++;
+		addDynArr(data->primes, data->tested);
+		data->primes->lock--;
 	}
-	return div;
+	pthread_exit(NULL);
 }
-		
-
-
