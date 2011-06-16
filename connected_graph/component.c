@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #define GRAPH_FILE "graph.txt"
-#define NUM_CPU 2
+#define NUM_CPU 4
 #define NUM_NODES 26
 
 struct pt_arg {
@@ -19,6 +19,10 @@ struct node {
     int n_lock;
 };
 
+/*
+ * Initialize the "nodes" datastructure. It is a 
+ *
+ */
 void *init_nodes(struct node* nodes, int count)
 {
     int i;
@@ -83,7 +87,7 @@ void *_generate_ds(FILE* fp,struct node* nodes)
     return;
 }
 
-void *walk_node(struct node* static_node, struct node* local_node) {
+void *walk_node( struct node* static_node, struct node* local_node) {
     int i;
     struct node node_loc,node_stat;
     for(i=0;i<NUM_NODES;i++) {
@@ -103,8 +107,9 @@ void *walk_node(struct node* static_node, struct node* local_node) {
     }
 }
 
-void *init_arg(struct node *nodes, struct pt_arg* pt_arg,int size){
+void *init_arg(struct node *nodes, struct pt_arg* pt_arg){
     int i,node_count,node_per_thread,extra;
+
     node_per_thread = NUM_NODES/NUM_CPU;
     extra = NUM_NODES%node_per_thread;
     for(i=0;i<NUM_CPU;i++){
@@ -113,18 +118,19 @@ void *init_arg(struct node *nodes, struct pt_arg* pt_arg,int size){
     }
     pt_arg[i-1].size += extra;
 }
-void *calc_connected(void *ptg_arg) {
+
+void *calc_connected(void *pt_arg) {
     int i;
-    struct node* start_node;
-    for(i=0;i<ptg_arg;i++){
+    struct node* start_node = ((struct pt_arg *)pt_arg)->start_node;
+    for( i=0; i<(int)((struct pt_arg*)pt_arg)->size ;i++ ){
         if(((struct node*)start_node)->letter == 0){
             printf("Empty node\n");
             pthread_exit(NULL);
         }
         printf("Non-Empty node\n");
-        walk_node( (struct node *)start_node, (struct node *)start_node );
+        walk_node( &start_node[i], &start_node[i] );
+        printf("Done with node: %c\n", ((struct node*)&start_node[i])->letter);
     }
-    printf("Done with node: %c\n",((struct node*)start_node)->letter);
     pthread_exit(NULL);
 }
 
@@ -146,7 +152,7 @@ int main(void)
 
 
     init_nodes(nodes,count);
-    init_arg(nodes,pt_arg,NUM_CPU);
+    init_arg(nodes,pt_arg);
 
     fp = fopen(GRAPH_FILE, "r");
     if(fp == NULL) {
@@ -161,7 +167,7 @@ int main(void)
         node_per_thread = NUM_NODES/NUM_CPU
     */
     for(i=0;i<NUM_CPU;i++){
-        rc = pthread_create (&threads[i], &attr, calc_connected, (void *)pt_arg[i]);
+        rc = pthread_create (&threads[i], &attr, calc_connected, (void *)&pt_arg[i]);
         if (rc){
             printf("ERROR; return code from pthread_create() is %d\n", rc);
             exit(-1);
@@ -180,7 +186,6 @@ int main(void)
     }
 
     printf("Crunched\n");
-    sleep(1);
     _print_nodes(nodes,count);
 
     fclose(fp);
