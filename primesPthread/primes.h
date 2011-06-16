@@ -6,3 +6,4 @@
 
 int isPrime(int tested);
 int isPrimeDA(int tested, struct DynArr *primes);
+int isPrimeDAPara(int tested, struct DynArr *primes);

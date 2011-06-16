@@ -13,7 +13,7 @@ int main (int argc, const char *argv[]) {
 	printf("%d is bound\n", upperBound);
 	startTime = time(NULL);
 	for(i = 2; i <= upperBound; i++){
-        	isPrimeDA(i, primes);
+        	isPrimeDAPara(i, primes);
 		if(i != 2) i++;
 	}
 	endTime = time(NULL);

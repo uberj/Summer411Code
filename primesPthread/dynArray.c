@@ -20,7 +20,7 @@ void initDynArr(DynArr *v, int capacity)
 {
 	v->data = (int *) malloc(sizeof(int) * capacity);
 	assert(v->data != 0);
-	
+	v->lock = 0;	
 	v->size = 0;
 	v->capacity = capacity;
 }
@@ -229,4 +229,3 @@ void copyDynArr(DynArr *source, DynArr *destination)
 	
 	destination->size = source->size;
 }
-

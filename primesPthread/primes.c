@@ -39,7 +39,8 @@ int isPrimeDA (int tested, struct DynArr *primes){
 
 int isPrimeDAPara(int tested, struct DynArr *primes){
 	int i, prime, div, size;
-	double sqroot = primes->size;
+	double sqroot;
+	size = primes->size;
 	sqroot = (int)sqrt((double)tested);
 	if(size > 0){
 		for(i = 0; i < size; i++){
@@ -56,11 +57,10 @@ int isPrimeDAPara(int tested, struct DynArr *primes){
 		}
 	}
         else if((div = isPrime(tested)) == tested){
-        	while(prime->lock > 0);
+        	while(primes->lock > 0);
 	        primes->lock++;
 		addDynArr(primes, tested);
 		primes->lock--;
-		return tested;
 	}
 	return div;
 }
