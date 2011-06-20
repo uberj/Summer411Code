@@ -6,10 +6,11 @@
 #include "dynArray.h"
 
 struct Data {
+	int lock;
 	int tested;
 	struct DynArr *primes;
 };
 
 int isPrime(int tested);
 int isPrimeDA(int tested, struct DynArr *primes);
-void isPrimeDAPara(struct Data *data);
+void isPrimeDAPara(void *data);

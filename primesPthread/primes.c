@@ -6,7 +6,7 @@
 */
 int isPrime (int tested){
 	int i;
-	for(i = 2; i < (int)sqrt((double)tested); i++){
+	for(i = 2; i <= (int)sqrt((double)tested); i++){
 		if(tested % i == 0) return i;
 	}
 	return tested;
@@ -37,30 +37,17 @@ int isPrimeDA (int tested, struct DynArr *primes){
 	return div;
 }
 
-void isPrimeDAPara(struct Data *data){
-	int i, prime, div, size;
-	double sqroot;
-	size = data->primes->size;
-	sqroot = (int)sqrt((double)data->tested);
-	if(size > 0){
-		for(i = 0; i < size; i++){
-                	if((prime = getDynArr(data->primes, i)) <= sqroot){
-				if(data->tested % prime == 0) pthread_exit(NULL);
-			}
-			else{
-                        	while(data->primes->lock > 0);
-				data->primes->lock++;
-				addDynArr(data->primes, data->tested);
-				data->primes->lock--;
-				pthread_exit(NULL);
-			}
-		}
-	}
-        else if((div = isPrime(data->tested)) == data->tested){
-        	while(data->primes->lock > 0);
-	        data->primes->lock++;
-		addDynArr(data->primes, data->tested);
+void isPrimeDAPara(void *datapass){
+	int  div, tested;
+	struct Data *data;
+	data = (struct Data *)datapass;
+	tested = data->tested;
+	if(data->lock == 1) data->lock--;
+	if((div = isPrime(tested)) == tested){
+       		while(data->primes->lock > 0);
+		data->primes->lock++;
+		addDynArr(data->primes, tested);
 		data->primes->lock--;
+		pthread_exit(NULL);
 	}
-	pthread_exit(NULL);
 }
