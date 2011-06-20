@@ -20,8 +20,9 @@ struct node {
 };
 
 /*
- * Initialize the "nodes" datastructure. It is a 
- *
+ * Initialize the "nodes" datastructure. This is a
+ * list where all the nodes are kept. Each node is it's
+ * own struct node.
  */
 void *init_nodes(struct node* nodes, int count)
 {
@@ -34,6 +35,10 @@ void *init_nodes(struct node* nodes, int count)
     return;
 
 }
+/*
+ * Pass in nodes and print out the contents of each node's
+ * neighbors or _view array.
+ */
 
 void *_print_nodes(struct node* nodes, int count)
 {
@@ -56,6 +61,11 @@ void *_print_nodes(struct node* nodes, int count)
 
 }
 
+/*
+ * Take in a file pointer fp and nodes. Parse the file
+ * and populate the nodes in the nodes array with the
+ * edges found in the file.
+ */
 void *_generate_ds(FILE* fp,struct node* nodes)
 {
     char unit[7];
