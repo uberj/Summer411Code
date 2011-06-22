@@ -23,12 +23,17 @@ int main(int argc, char *argv[]) {
     double *A, *B, *C;
     double t;
     int sizeSent, sizeToBeSent;
+    int namelen;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
 
     /* Hello, world */
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+
+    /* Used to identify the host that is executing this code */
+    MPI_Get_processor_name(processor_name, &namelen);
 
     /* Get n and broadcast it to all processes */
     if (!mpiRank) {
@@ -119,13 +124,17 @@ int main(int argc, char *argv[]) {
     }
     */
 
+    /* Print the product matrix from the origin host */
+    /*
     if (!mpiRank) {
         for (i=0; i<n_sq; i++) {
             printf("%5.1lf\t", C[i]);
             if (i%n == 0) printf("\n");
         }
     }
-    printf("Total time for process #%d was %f seconds.\n", mpiRank, t);
+    */
+
+    printf("Total time for process #%d was %f seconds. (%s)\n", mpiRank, t, processor_name);
 
     /* Goodbye, world */
     MPI_Finalize();
