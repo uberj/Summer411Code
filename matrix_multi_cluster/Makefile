@@ -15,7 +15,7 @@ CC_SHL		= true
 C_COMPILE_SHL	= $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 
 VPATH		= .
-MPICHDIR	= ..
+MPICHDIR	= /home/bob/mpich2-1.4
 CC		= $(MPICHDIR)/bin/mpicc
 CFLAGS		= 
 CXXFLAGS	=
