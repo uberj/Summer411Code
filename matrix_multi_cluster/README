@@ -1,0 +1,15 @@
+Matrix Multiplication with MPI
+==============================
+
+Description: Write a multi-process program in C that will multiply two matrices of arbitrary size. Implement MPI for interprocess communication and make it scalable in a 4-node cluster computing environment. Your program will be provided two parameters via command line argument. One that will set the size of the matrices, and one that will optionally cause the master process to print out the product matrx. Using the printing option, you can verify that the multiplication has been correctly executed. As the size of your matrices gets larger it will be less useful to print out their products. Find the optimal number of processes to use for computation specific to your given cluster. 
+Hint: The nodes in your cluster are built with one intel atom processor each.
+
+Output: Have each participating process print the total time (in seconds) after finishing their computation. Also, have it identify what host it belongs to. Use the 'time' utility to print out the overall computation time.
+
+USAGE
+-----
+Compile code:
+	make all
+An example execution:
+	time mpiexec -n 2 /home/bob/matmulti 1000
+this will spawn 2 processes that will work together to multiply 2 1000x1000 matrices 
