@@ -11,25 +11,24 @@ pthread_mutex_t mutexsum;
 
 void *findPrime(void *param)
 {
-	int i, j, test, tid;
+	int i, j, test, tid, runningCount = 0;
 	tid = (int)param;
 
      	for(i = (2 * tid) + 3; i < UBOUND; i += (2 * NUM_THREADS)){
 		test = (int)sqrt((double)i);
 		for(j = 2; j <= test; j++){
 			if(i % j == 0){
-				pthread_mutex_lock(&mutexsum);
-				kPrimeCount--;
-				pthread_mutex_unlock(&mutexsum);
+				runningCount--;
 				break;
 			}
 		}
 		if(i != UBOUND){
-			pthread_mutex_lock(&mutexsum);
-			kPrimeCount++;
-			pthread_mutex_unlock(&mutexsum);
+			runningCount++;
 		}
 	}
+	pthread_mutex_lock(&mutexsum);
+	kPrimeCount += runningCount;
+	pthread_mutex_unlock(&mutexsum);
 	pthread_exit((void*) tid);
 }
 
