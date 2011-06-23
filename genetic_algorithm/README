@@ -1,0 +1,7 @@
+Genetic Algorithm Project
+=========================
+
+geneticAlgorithm1.c:
+This is an example taken from http://www-cs-students.stanford.edu/~jl/Essays/ga.html
+that demonstrates a very simplistic genetic algorithm. It doesn't accomplish anything 
+other than matching an array of characters that represent the genes of an organism.
