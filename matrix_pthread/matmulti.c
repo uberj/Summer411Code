@@ -32,10 +32,10 @@ struct Data{
 void matMulti(void *datapass){
 	int i, j, k, t, start, dim, rows;
 	assert(datapass != NULL);
+	struct Data *data = (struct Data *)datapass;
 	assert(data->a != NULL);
 	assert(data->b != NULL);
 	assert(data->ab != NULL);
-	struct Data *data = (struct Data *)datapass;
 	i = data->sRow;
 	rows = data->nRow; 
         dim = data->dim;
@@ -58,9 +58,9 @@ void matMulti(void *datapass){
  * Post: user is displayed the array as a 2D array
  * corresponding to number of rows and columns passed
  */
-void print_array(int *a, int row, int columns){	
+void print_array(short *a, int row, int columns){	
         int i, j;
-	assert(a != null);
+	assert(a != NULL);
 	printf("Printing Matrix: \n");
         for(i = 0; i < row; i++){
                 for(j = 0; j < columns; j++){
@@ -72,7 +72,7 @@ void print_array(int *a, int row, int columns){
 
 int main(int argc, char *argv[]){
 	int i, j, k, dim, print, nthreads;
-	if(argc != 3){ 
+	if(argc != 4){ 
 		printf("bad use pMult N C P\n");
 		return -1; 
 	}
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
 	/* Catch threads before executing */
 	for(i = 0; i < nthreads; i++){
         	k = pthread_join(threads[i], &status);
-		if(k) printf("Error on pthread_join %ld");
+		if(k) printf("Error on pthread_join %ld", (long)status);
 	}
 	if(print) print_array(data->ab, dim, dim);
 	
