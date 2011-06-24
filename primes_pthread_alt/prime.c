@@ -34,12 +34,12 @@ void *findPrime(void *param)
 
 int main(int argc, char *argv[])
 {
-	pthread_t thread[NUM_THREADS];
+    	pthread_t thread[NUM_THREADS = atoi(argv[1])];
 	pthread_attr_t attr;
 	int rc, t;
 	void *status;
 
-	NUM_THREADS = atoi(argv[1]);
+	//NUM_THREADS = atoi(argv[1]);
         UBOUND = atoi(argv[2]);
 
 	pthread_attr_init(&attr);
