@@ -4,9 +4,8 @@
 #define TYPE  long
 
 /* Matthew Atwood 6/22/11
- * A Circularly Double Linked List with a Lock 
- * for a multithreaded programs. The list is kept
- * in order.
+ * A Circularly Double Linked List.
+ * The list is kept in order.
  */
 
 struct Node{
@@ -19,7 +18,6 @@ struct List{
 	struct Node *head;
 	struct Node *tail;
 	int size;
-	int lock;
 };
 
 /* List interface */

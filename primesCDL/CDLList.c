@@ -6,7 +6,7 @@
  * Function initializes the list.
  * Param: list is the list
  * Pre: list is not null
- * Post: list->size is 0 and list->lock is 0
+ * Post: list->size is 0 
  */
 
 void initList(struct List *list){
@@ -14,7 +14,6 @@ void initList(struct List *list){
 	struct Node *fSent = (struct Node *)malloc(sizeof(struct Node));
 	struct Node *bSent = (struct Node *)malloc(sizeof(struct Node));
 	list->size = 0;
-	list->lock = 0;
 	list->head = fSent;
 	list->tail = bSent;
 	list->tail->value = -2;
@@ -35,9 +34,6 @@ void addList(struct List *list, struct Node *node){
 	assert(list != NULL);
 	assert(node != NULL);
 
-	while(list->lock == 1) ;
-	list->lock = 1;
-	
 	if(list->size < 1){
 		list->tail->prev = node;
 		node->next = list->tail;
@@ -58,8 +54,7 @@ void addList(struct List *list, struct Node *node){
 		place->next = node;
 		node->next->prev = node;
 	}
-	list->size++;
-	list->lock = 0;	
+	list->size++;	
 }
 
 
