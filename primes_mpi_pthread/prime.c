@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
         //increment = mpiSize * 2; //  there is no need to test even numbers
 
 	pthread_attr_init(&attr);
-	pthraed_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	pthread_mutex_init(&lock, NULL);
 
 
