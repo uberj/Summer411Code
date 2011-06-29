@@ -16,10 +16,14 @@ struct pParam {
 
 void *findPrime(void *param)
 {
-	int i, j, test, runningcount = 0;
+	int i, j, test, start, increment, runningcount = 0;
 	struct pParam *p = (struct pParam *)param;
 
-	for(i = (2 * (p->tid + p->mrank)) + 3; i < p->bound; i += (2 * (p->tsize + p->msize))){
+	start = ((p->tid + p->mrank) * 2) + 3;
+	increment = (p->tsize + p->msize) * 2;
+
+	printf("|| pThread %d starting at %d incrementing by %d.\n", p->tid, start, increment);
+	for(i = start; i < p->bound; i += increment){
         	test = (int)sqrt((double)i);
 		for(j = 2; j <= test; j++){
 			if(i % j == 0){
