@@ -6,15 +6,13 @@
 
 #define TAG_INIT 31337
 
-int kPrimeCount;
-
 struct pParam {
 	int tid, tsize;
 	int bound;
 	int mrank, msize;
 	int *primecount;
 	pthread_mutex_t *lock;
-}
+};
 
 void *findPrime(void *param)
 {
