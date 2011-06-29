@@ -20,7 +20,7 @@ void *findPrime(void *param)
 	struct pParam *p = (struct pParam *)param;
 
 	start = (((p->tid * p->msize) + p->mrank) * 2) + 3;
-	increment = (p->tsize + p->msize) * 2;
+	increment = (p->tsize * p->msize) * 2;
 
 	printf("|| pThread %d starting at %d incrementing by %d.\n", p->tid, start, increment);
 	for(i = start; i < p->bound; i += increment){
