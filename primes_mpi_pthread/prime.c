@@ -100,13 +100,13 @@ int main(int argc, char *argv[])
 		param[i]->msize = mpiSize;
 		param[i]->lock = &lock;
 		param[i]->primecount = &tPrimeCount;
-		rc = pthread_create(&thread[i], &attr, findPrime, (void *)param[i]);
+		rc = pthread_create(&thread[i], &attr, findPrime, (void *)(param[i]));
 		//TODO check for errors
 	}
 
 	pthread_attr_destroy(&attr);
 	for (i = 0; i < tSize; i++) {
-        	rc = pthread_join(thread[t], &status);
+        	rc = pthread_join(thread[i], &status);
 		//TODO check for errors
 		printf("[%s] completed join with pThread %d.\n", processor_name, i);
 	}
