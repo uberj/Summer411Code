@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
         MPI_Get_processor_name(processor_name, &namelen);
 	
-	fprintf(stderr, "Process %d started on host %s.\n", mpiRank, processor_name);
+	printf("Process %d started on host %s.\n", mpiRank, processor_name);
 
 	if (!mpiRank){
 		if (argc > 2){
@@ -119,7 +119,8 @@ int main(int argc, char *argv[])
 
 
 	if (!mpiRank){
-		tPrimeCount++; //because we skip 2
+		FinalPrimeCount++; //because we skip 2
+		FinalPrimeCount += tPrimeCount;
 		for(i=1;i<mpiSize;i++){
         		MPI_Recv(&tPrimeCount, 1, MPI_INT, i, TAG_INIT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			FinalPrimeCount += tPrimeCount;
