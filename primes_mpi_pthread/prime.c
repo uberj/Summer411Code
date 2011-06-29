@@ -9,7 +9,7 @@
 int kPrimeCount;
 
 struct pParam {
-	int tid, tsize
+	int tid, tsize;
 	int bound;
 	int mrank, msize;
 	int *primecount;
