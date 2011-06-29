@@ -30,7 +30,7 @@ void *findPrime(void *param)
 			}
 		}
 		if(i != p->bound){
-			runningcount++:
+			runningcount++;
 		}
 	}
 	pthread_mutex_lock(p->lock);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	// pthread data
 	pthread_t thread[tSize];
-	struct pParam param[tSize];
+	struct pParam *param[tSize];
 	pthread_attr_t attr;
 	pthread_mutex_t lock;
 	long rc;
@@ -92,15 +92,15 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < tSize; i++) {
 		printf("[%s] creating pThread %d.\n", processor_name, i);
-		param[i] = (struct pParam)malloc(sizeof(struct pParam));
-		param[i].tid = i;
-		param[i].tsize = tSize;
-		param[i].bound = ubound;
-                param[i].mrank = mpiRank;
-		param[i].msize = mpiSize;
-		param[i].lock = &lock;
-		param[i].primecount = &tPrimeCount;
-		rc = pthread_create(&thread[i], &attr, findPrime, (void *)&(param[i]));
+		param[i] = (struct pParam *)malloc(sizeof(struct pParam));
+		param[i]->tid = i;
+		param[i]->tsize = tSize;
+		param[i]->bound = ubound;
+                param[i]->mrank = mpiRank;
+		param[i]->msize = mpiSize;
+		param[i]->lock = &lock;
+		param[i]->primecount = &tPrimeCount;
+		rc = pthread_create(&thread[i], &attr, findPrime, (void *)param[i]);
 		//TODO check for errors
 	}
 
@@ -112,8 +112,8 @@ int main(int argc, char *argv[])
 	}
 	pthread_mutex_destroy(&lock);
 
-	time = MPI_Wtime() - t;
-	printf("[Host: %s] process %d completed computation in %f.\n", processor_name, mpiRank, t);
+	time = MPI_Wtime() - time;
+	printf("[Host: %s] process %d completed computation in %f.\n", processor_name, mpiRank, time);
 
 
 	if (!mpiRank){
