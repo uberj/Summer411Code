@@ -24,25 +24,25 @@ void *findPrime(void *param)
 	for(i = (2 * (p->tid + p->mrank)) + 3; i < p->bound; i += (2 * (p->tsize + p->msize))){
         	test = (int)sqrt((double)i);
 		for(j = 2; j <= test; j++){
-			if(i % j = 0){
+			if(i % j == 0){
 				runningcount--;
 				break;
 			}
 		}
-		if(i != UBOUND){
+		if(i != p->bound){
 			runningcount++:
 		}
 	}
 	pthread_mutex_lock(p->lock);
 	*(p->primecount) += runningcount;
 	pthread_mutex_unlock(p->lock);
-	pthread_exit((void *) tid);
+	pthread_exit((void *) p->tid);
 }
 
 
 int main(int argc, char *argv[])
 {
-	int i, ubound = 0, tPrimeCount = 0, FinalPrimeCount = 0, tSize = argv[1];
+	int i, ubound = 0, tPrimeCount = 0, FinalPrimeCount = 0, tSize = atoi(argv[1]);
 
 	// pthread data
 	pthread_t thread[tSize];
@@ -84,15 +84,15 @@ int main(int argc, char *argv[])
         //increment = mpiSize * 2; //  there is no need to test even numbers
 
 	pthread_attr_init(&attr);
-	pthraed_attr_setdetachstate(&attttr, PTHREAD_CREATE_JOINABLE);
+	pthraed_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	pthread_mutex_init(&lock, NULL);
 
 
         time = MPI_Wtime();
 
-        for (i = 0; i < tSize; i++)
+        for (i = 0; i < tSize; i++) {
 		printf("[%s] creating pThread %d.\n", processor_name, i);
-		param[i] = (struct pParam *)malloc(sizeof(struct pParam));
+		param[i] = (struct pParam)malloc(sizeof(struct pParam));
 		param[i].tid = i;
 		param[i].tsize = tSize;
 		param[i].bound = ubound;
