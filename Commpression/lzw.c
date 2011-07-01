@@ -17,10 +17,10 @@ void add_symbol( char *new_seq, int seq_size, struct symbol** symbols ) {
     new_symbol->count = 1;
     // INIT the space for the sequence
     if ( (new_symbol->seq = (char *)malloc(sizeof(char)*seq_size)) == NULL) exit(-1);
-    new_symbol->seq = calloc(seq_size, sizeof(char));
+    new_symbol->seq = malloc(sizeof(char)*seq_size);
     // Copy in the new symbol. This will now be a unique key in the dictionary.
     strcpy( new_symbol->seq, new_seq );
-    HASH_ADD_STR( *symbols, seq, new_symbol );
+    HASH_ADD_KEYPTR(hh,*symbols,new_symbol->seq,seq_size,new_symbol);
 }
 void count_inc_symbol( struct symbol *symbol ) {
     symbol->count++;
@@ -40,8 +40,9 @@ int main(int argc, char **argv){
     FILE *file;
     int i = 0;
     int j = 0;
+    int o_size = 0;
     struct symbol *symbols = NULL;
-    struct symbol *temp;
+    struct symbol *temp = NULL;
 
     if(argc > 1){
         fname = argv[1];
@@ -55,16 +56,28 @@ int main(int argc, char **argv){
     fprintf(stdout, "File %s was open success fully\n", fname);
 
     for( new = fgetc(file); new != EOF ; new = fgetc(file) ) {
-        if ( (temp = (struct symbol*)malloc(sizeof(struct symbol))) == NULL) exit(-1);
-        if ( (temp->seq = (char *)malloc(sizeof(char)*2)) == NULL) exit(-1);
-        strncpy(temp->seq,"T",2);
-        HASH_ADD_KEYPTR(hh,symbols,temp->seq,2,temp);
-        HASH_FIND(hh,symbols,"T",2,temp);
-        if (temp) printf("found dupe");
-        printf("%c,",new);
+        omega[o_size] = new;
+        omega[o_size+1] = 0;
+        o_size++;
+        HASH_FIND( hh, symbols, omega , o_size , temp );
+        if (temp) {
+            temp->count++;
+            temp = NULL;
+        } else {
+            // create space for new symbol
+            if ( (temp = (struct symbol*)malloc(sizeof(struct symbol))) == NULL) exit(-1);
+            temp->count = 1;
+            // INIT the space for the sequence
+            if ( (temp->seq = (char *)malloc(sizeof(char)*o_size)) == NULL) exit(-1);
+            strcpy( temp->seq, omega );
+            HASH_ADD_KEYPTR(hh,symbols,temp->seq,o_size,temp);
+            // Reset omega
+            omega[0] = 0;
+            o_size = 0;
+        }
         i++;
     }
-    
+
     print_symbols( symbols );
     fclose(file);
     return 0;
