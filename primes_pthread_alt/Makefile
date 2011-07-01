@@ -1,10 +1,10 @@
 default: prime
 
-prime.o:
-	gcc -c prime.c
+prime.o: prime.c
+	gcc -O3 -march=atom -ffast-math -c prime.c
 
 prime: prime.o
-	gcc -o prime prime.o -pthread -lm
+	gcc -O3 -march=atom -ffast-math -o prime prime.o -pthread -lm
 
 clean: 
 	rm -f *.o prime
