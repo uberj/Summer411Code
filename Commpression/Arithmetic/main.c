@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include "model.h"
+#include "model.c"
 
 int main( int argc, char **argv ) {
     FILE *file;
@@ -21,8 +21,9 @@ int main( int argc, char **argv ) {
     struct model mdl;
     populate_model( file, &mdl );
     init_shifting_model( &mdl );
+    fseek( file, 0 , SEEK_SET ); //Reset file
     encode_with_model( file, &mdl );
-    print_model(&mdl);
+    //print_model(&mdl);
     return 0;
 
 }
