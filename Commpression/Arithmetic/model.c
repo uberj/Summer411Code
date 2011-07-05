@@ -1,3 +1,7 @@
+/*
+ * Jacques Uber
+ * References: Sable Technical Report No. 2007-5
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -32,6 +36,29 @@ void print_model( struct model* mdl );
  */
 void encode_with_model( FILE *fp, struct model* mdl );
 void setBit( struct model *mdl, int bit );
+
+void encode_finish( struct model *mdl ) {
+    unsigned long g_FirstQuarter = mdl->g_FirstQuarter;
+    unsigned long mScale = mdl->mScale;
+    unsigned long mLow  = mdl->mLow;
+    int i;
+
+    /* We know after the last encoding the bounds contain 1 quarter. Use lower bounds
+     * do determine what the final bits should be.
+     * Case 1: low < firstQuarter < Half <= high
+     * Case 2: low < Half < thirdQuarter <= high
+     */
+    if( mLow < g_FirstQuarter ) {
+        setBit( mdl , 0 );
+        for( i=0; i < mScale; i++) {
+            setBit( mdl, 1 );
+        }
+    } else {
+        setBit( mdl , 1 ); //Decoder add's zero's
+    }
+
+}
+
 
 void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long high_count, unsigned long total ) {
     unsigned long g_Half = mdl->g_Half;
@@ -104,6 +131,7 @@ void encode_with_model( FILE *fp, struct model* mdl ){
         }
         do_one_encode( mdl, low_count, low_count + mdl->symbols[i], mdl->total );
     }
+    encode_finish( mdl );
 }
 
 void setBit( struct model *mdl, int bit ) {
