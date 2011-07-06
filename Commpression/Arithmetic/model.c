@@ -1,5 +1,5 @@
 /*
- * Jacques Uber
+ * Jacques Uber 7/6/2011
  * References: Sable Technical Report No. 2007-5
  */
 #include <stdio.h>
@@ -9,6 +9,7 @@
 #define SB 7
 #define MODEL_SIZE 254
 #define BUF_SIZE 32
+#define SYM_START 0
 // Better to over shoot. I'm using unsigned longs.
 
 static unsigned char bit_buff;
@@ -17,6 +18,7 @@ static unsigned char en_code[BUF_SIZE];
 static unsigned char de_code[BUF_SIZE];
 static unsigned int en_code_pos;
 static unsigned int de_code_pos;
+static unsigned int mBuffer;
 
 struct model {
     FILE *out_fp;
@@ -49,6 +51,7 @@ void set_bit( struct model *mdl, int bit );
 void flush_bit_buff( struct model *mdl);
 void decode_with_model( struct model* mdl );
 void fill_bit_buff( struct model *mdl );
+void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long high_count);
 
 int get_bit( struct model *mdl ) {
     unsigned char clean = 0; //Use this guy to get bit values
@@ -57,6 +60,10 @@ int get_bit( struct model *mdl ) {
 
     switch ( bit_pos ) {
         case 0:
+            if( de_code[de_code_pos] == EOF ){
+                printf("reached the end\n");
+                return -1;
+            }
             clean = de_code[de_code_pos] & '\1';
             break;
         case 1:
@@ -69,10 +76,14 @@ int get_bit( struct model *mdl ) {
             clean = de_code[de_code_pos] & 0x8;
             de_code_pos++;
             bit_pos = 0;
-            return clean; //Get out!
+            goto out;
     }
     bit_pos++;
-    return clean;
+out:
+    if(clean)
+        return 1;
+    else
+        return 0;
 
 }
 void fill_bit_buff( struct model *mdl ){
@@ -81,30 +92,108 @@ void fill_bit_buff( struct model *mdl ){
     for( i=0, sym = fgetc(mdl->out_fp); i < BUF_SIZE && sym != EOF ; i++, sym = fgetc(mdl->out_fp) ) {
         de_code[i] = sym;
     }
+    if( sym == EOF )
+        de_code[i+1] = EOF;
     de_code_pos = 0;
     bit_pos = 0;
 
+}
+
+int find_char( struct model *mdl ) {
+    unsigned long mHigh = mdl->mHigh;
+    unsigned long mLow  = mdl->mLow;
+    unsigned long total = mdl->total;
+
+    unsigned long mStep = ( mHigh - mLow + 1 ) / total;
+    return ( mBuffer - mLow ) / mStep;
 }
 
 
 void decode_with_model( struct model* mdl ) {
     int i = 0;
+    int id_value;
+    int sym;
+    int low_count;
+    int decoded_count;
     //unsigned long low_count;
     for( i=0; i<20; i++){
-        if( get_bit( mdl ) )
-            printf("1");
-        else
-            printf("0");
+        low_count = 0;
+        id_value = find_char( mdl );
+        for(sym = SYM_START ; low_count + mdl->symbols[sym] <= id_value; sym ++){
+            low_count += mdl->symbols[sym];
+        }
+        printf("%c",(char)sym);
+        decoded_count++;
+        if(decoded_count == mdl->total)
+            break;
+        // Update our model.
+        do_one_decode( mdl, low_count, low_count + mdl->symbols[sym] );
+
     }
     //encode_finish( mdl );
     printf("\n");
+    return;
+}
+
+void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long high_count) {
+    unsigned long g_Half = mdl->g_Half;
+    unsigned long g_ThirdQuarter = mdl->g_ThirdQuarter;
+    unsigned long g_FirstQuarter = mdl->g_FirstQuarter;
+    unsigned long total = mdl->total;
+    unsigned long mScale = mdl->mScale;
+    unsigned long mHigh = mdl->mHigh;
+    unsigned long mLow  = mdl->mLow;
+    unsigned long mStep = ( mHigh - mLow + 1 ) / total;
+    mHigh   = mLow + mStep*high_count - 1;
+    mLow    = mLow + mStep*low_count;
+
+    //E1-E2 Scale
+    while( ( mHigh < g_Half ) || ( mLow >= g_Half ) ) {
+        if( mHigh < g_Half ) { //E1
+            mLow = mLow * 2;
+            mHigh = mHigh * 2 + 1;
+            mBuffer = 2 * mBuffer + get_bit( mdl );
+        } else if( mLow >= g_Half ) { //E2
+            mLow = 2 * ( mLow - g_Half );
+            mHigh = 2 * ( mHigh - g_Half ) + 1;
+            mBuffer = 2 * ( mBuffer - g_Half ) + get_bit( mdl );
+        }
+    }
+
+    //E3 Scale
+    while( ( g_FirstQuarter <= mLow ) && ( mHigh < g_ThirdQuarter ) ) {
+        mScale++;
+        mLow = 2 * ( mLow - g_FirstQuarter );
+        mHigh = 2 * ( mHigh - g_FirstQuarter ) + 1;
+        mBuffer = 2 * ( mBuffer - g_FirstQuarter ) + get_bit( mdl );
+    }
+
+    // Update model state
+    mdl->g_Half = g_Half;
+    mdl->g_ThirdQuarter = g_ThirdQuarter;
+    mdl->g_FirstQuarter = g_FirstQuarter;
+    mdl->mScale = mScale;
+    mdl->mHigh = mHigh;
+    mdl->mLow = mLow;
+
 }
 
 void init_decode( struct model *mdl ) {
+    int i;
     bit_buff = 0;
     bit_pos = 0;
     de_code_pos = 0;
+    mdl->mHigh = 1 << SB;
+    mdl->mLow = 0;
     fill_bit_buff( mdl );
+    // Put the first SB into the buffer.
+    for( i = 0; i < SB; i++ ) { // This will totally break if we have less than SB bits.
+        mBuffer = ( mBuffer << 1 );
+        if(get_bit( mdl )){
+            mBuffer += 1;
+        }
+
+    }
 }
 
 void encode_finish( struct model *mdl ) {
@@ -195,7 +284,7 @@ void encode_with_model( FILE *fp, struct model* mdl ){
     for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
         // Caluculate low count
         low_count = 0;
-        for(i=97;(char)i<sym;i++){
+        for(i = SYM_START ;(char)i<sym;i++){
             if( !mdl->symbols[i] )
                 continue;
             else
