@@ -9,11 +9,18 @@ arith.a: $(objects)
 	$(CC) $(CFLAGS) -o run arith.a
 
 
-test: heaplib.a heaptest.c
-	$(CC) $(CFLAGS) -o run arith.a
-	./run
+comp: arith.a
+	./run -c data.txt
+	@echo
+	cat data.txt.acp
+
+test: arith.a
+	./run -c data.txt
+	cat data.txt.acpi?
+	./run -x data.txt.acpi
 
 clean:
 	rm -f *.o
 	rm -f arith.a
 	rm -f run
+	rm data.txt.*

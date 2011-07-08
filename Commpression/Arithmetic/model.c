@@ -5,11 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "model.h"
 #define SB 7
 #define MODEL_SIZE 254
-#define BUF_SIZE 32
+#define BUF_SIZE 100
 #define SYM_START 0
+#define META_SIZE 3+5 // Multiply this by # symbols to get starting of message
 // Better to over shoot. I'm using unsigned longs.
 
 static unsigned char bit_buff;
@@ -23,6 +25,7 @@ static unsigned int mBuffer;
 struct model {
     FILE *out_fp;
     FILE *in_fp;
+    int cardinality;
     unsigned long* symbols;
     unsigned long total;
     unsigned long mHigh;
@@ -87,13 +90,22 @@ out:
 
 }
 void fill_bit_buff( struct model *mdl ){
-    int i;
-    char sym;
+    //int i;
+    //char sym;
+    int tell;
+    fseek( mdl->out_fp, 3+5*(mdl->cardinality)+1, SEEK_SET );
+    tell = ftell( mdl->out_fp);
+    printf("reading from pos %i in output\n",tell);
+    fread( &de_code, sizeof(char), BUF_SIZE, mdl->out_fp );
+    /*
     for( i=0, sym = fgetc(mdl->out_fp); i < BUF_SIZE && sym != EOF ; i++, sym = fgetc(mdl->out_fp) ) {
+        tell = ftell( mdl->out_fp);
+        printf("reading from pos %i in output\n",tell);
         de_code[i] = sym;
     }
     if( sym == EOF )
         de_code[i+1] = EOF;
+    */
     de_code_pos = 0;
     bit_pos = 0;
 
@@ -116,7 +128,7 @@ void decode_with_model( struct model* mdl ) {
     int low_count;
     int decoded_count;
     //unsigned long low_count;
-    for( i=0; i<20; i++){
+    for( i=0; i < mdl->total+1 ; i++){
         low_count = 0;
         id_value = find_char( mdl );
         for(sym = SYM_START ; low_count + mdl->symbols[sym] <= id_value; sym ++){
@@ -124,13 +136,12 @@ void decode_with_model( struct model* mdl ) {
         }
         printf("%c",(char)sym);
         decoded_count++;
-        if(decoded_count == mdl->total)
+        if(decoded_count == mdl->total+1)
             break;
         // Update our model.
         do_one_decode( mdl, low_count, low_count + mdl->symbols[sym] );
 
     }
-    //encode_finish( mdl );
     printf("\n");
     return;
 }
@@ -216,12 +227,6 @@ void encode_finish( struct model *mdl ) {
         set_bit( mdl , 1 ); //Decoder add's zero's
     }
     flush_bit_buff( mdl );
-
-    //Debugging - print stuff (This will eventually need to be written to a file for
-    //the decoder to use)
-    printf("mHigh: %lu\n", mdl->mHigh );
-    printf("mLow: %lu\n", mdl->mLow );
-
 }
 
 
@@ -276,11 +281,18 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
 
 }
 
+/*
+ * This is serving as the init_encoding method.
+ */
 void encode_with_model( FILE *fp, struct model* mdl ){
     char sym;
     int i;
     unsigned long low_count;
+    int tell;
 
+    fseek( mdl->out_fp, 3+5*(mdl->cardinality)+1, SEEK_SET );
+    tell = ftell(mdl->out_fp);
+    printf("Starting to write at %i bytes.\n", tell );
     for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
         // Caluculate low count
         low_count = 0;
@@ -295,21 +307,25 @@ void encode_with_model( FILE *fp, struct model* mdl ){
             i++;
         }
         do_one_encode( mdl, low_count, low_count + mdl->symbols[i], mdl->total );
+        printf("%c",sym);
     }
+    printf("\n");
     encode_finish( mdl );
 }
 
 void flush_bit_buff( struct model *mdl ) {
-    int i;
+    int i,tell;
     en_code[en_code_pos] = bit_buff;
     // Last write
-    fwrite( &bit_buff, 1, 1, mdl->out_fp );
+    tell = ftell( mdl->out_fp);
+    printf("writing %x to pos %i in output\n",bit_buff,tell);
+    fwrite( &en_code, 1, BUF_SIZE, mdl->out_fp );
     en_code_pos++;
     //Debugging stuff
     printf("last byte: %d\n",bit_buff);
     printf("And buffer is...\n");
     for( i=0; i<en_code_pos ; i++ ){
-        printf("%d ",en_code[i]);
+        printf("%x ",en_code[i]);
     }
     printf("\n");
 }
@@ -320,40 +336,31 @@ void flush_bit_buff( struct model *mdl ) {
  * uneeded i/o requests.
  */
 void set_bit( struct model *mdl, int bit ) {
+    int tell;
     switch ( bit_pos ) {
         case 0:
-            if ( bit ){
-                bit_buff |= '\1';printf("0");
-            } else {
-                printf("X");
-            }
+            if ( bit )
+                bit_buff |= '\1';
             break;
         case 1:
-            if ( bit ){
-                bit_buff |= '\2';printf("1");
-            }else {
-                printf("X");
-            }
-
+            if ( bit )
+                bit_buff |= '\2';
             break;
         case 2:
-            if ( bit ){
-                bit_buff |= '\4';printf("2");
-            }else {
-                printf("X");
-            }
-
+            if ( bit )
+                bit_buff |= '\4';
             break;
         case 3:
-            if ( bit ){
-                bit_buff |= 0x8;printf("3");
-            }else {
-                printf("X");
-            }
-
+            if ( bit )
+                bit_buff |= 0x8;
             // We need a new byte. Eventually we should store more than one byte. For now just write to file.
-            printf("new byte: %d\n",bit_buff);
-            fwrite( &bit_buff, 1, 1, mdl->out_fp );
+            if(en_code_pos >= BUF_SIZE) {
+                tell = ftell( mdl->out_fp);
+                printf("writing %x to pos %i in output\n",bit_buff,tell);
+                if (!fwrite( &en_code, 1, BUF_SIZE, mdl->out_fp ) ){
+                    printf("CRAP");
+                }
+            }
             en_code[en_code_pos] = bit_buff;
             en_code_pos++;
             bit_buff = 0x0;
@@ -375,16 +382,76 @@ void init_shifting_model( struct model *mdl ) {
     en_code_pos = 0;
 }
 
+/*
+ * Do statistics about the data set. Both encoding and decoding routines
+ * will need this data. Write the results to the output file so decoding can
+ * use.
+ * @post-condition: populate_model will put the OUTPUT file pointer where you should
+ * start to writing compressed data.
+ */
+/*                 #symbols
+ *  [Byte]  [Byte]  [Byte]  [Byte]  [4xByte]
+ *  (  Unused )             ^--------------^
+ *                          | first byte is the index of symbol
+ *                          | Next four bytes are the frequnce in
+ *                          | and unsigned long.
+ */
 void populate_model( FILE *fp, struct model* mdl ) {
     char sym;
-    unsigned long i;
+    unsigned char i;
+    char cardinal = 0;
+
     mdl->symbols = calloc( MODEL_SIZE, sizeof( unsigned long ) );
     mdl->total = 0;
+    // 2 bytes for meta data (unused)
+    fseek( mdl->out_fp, 2, SEEK_SET );
+    // byte 2 is for the number of symbols represented. Write this value to
+    // the file as the last thing done.
+    fseek( mdl->out_fp, 1, SEEK_CUR );
     for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
-        i = 0;
-        i += sym; // Stuff the char into an int so we can index an array.
-        mdl->symbols[i]++;
+        mdl->symbols[(int)sym]++;
         mdl->total++;
+    }
+    for( i=0; i < MODEL_SIZE; i++ ){
+        if( mdl->symbols[(int)i] ){
+            fwrite( &i, sizeof(char), 1, mdl->out_fp );
+            fwrite( &mdl->symbols[(int)i], sizeof(unsigned long), 1, mdl->out_fp );
+            cardinal++;
+        }
+    }
+    fseek( mdl->out_fp, 2, SEEK_SET );
+    fwrite( &cardinal, sizeof(char), 1, mdl->out_fp );
+    mdl->cardinality = cardinal;
+    // Put fp where the compressor should start to write.
+    fseek( mdl->out_fp, 4+4*(cardinal+ 1), SEEK_SET );
+}
+
+void read_model( struct model *mdl ){
+    char sym;
+    int i;
+    char cardinal = 0;
+    unsigned long count;
+    unsigned char* model_buffer;
+
+    mdl->symbols = calloc( MODEL_SIZE, sizeof( unsigned long ) );
+    mdl->total = 0;
+    // 2 bytes for meta data (unused)
+    fseek( mdl->out_fp, 2, SEEK_SET );
+    // byte 2 is for the number of symbols represented. Write this value to
+    fread( &cardinal, sizeof(char), 1, mdl->out_fp );
+    // There are cardinal many symbols. Read them all in one i/o request and create
+    // the model.
+    mdl->cardinality = (int)cardinal;
+    model_buffer = (unsigned char *)malloc(cardinal*(sizeof(char)+sizeof(unsigned long)));
+    fread( model_buffer, cardinal*(sizeof(char)+sizeof(unsigned long)), 1  \
+            , mdl->out_fp );
+
+    // the file as the last thing done.
+    for( i=0; i < cardinal * 5; i=i+5 ){
+        sym = model_buffer[i];
+        memcpy(&count, &model_buffer[i+1], 4); // unsigned long 4 bytes
+        mdl->symbols[(int)sym] = count;
+        mdl->total += count;
     }
 }
 
