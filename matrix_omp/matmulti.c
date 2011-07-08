@@ -56,6 +56,9 @@ int main (int argc, char *argv[])
 	#pragma omp parallel shared(A,B,C,order) private(i,j,tid)
 	{
 		tid = omp_get_thread_num();
+
+		if(!tid)
+			printf("Using %d threads on %d processors...\n", omp_get_num_threads(), omp_get_num_procs());
 		#pragma omp for schedule(dynamic,CHUNK)
         	for(i = 0; i < order; i++){
 			if(order <= PRINTMAX)
