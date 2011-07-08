@@ -23,7 +23,7 @@ int main (int argc, char *argv[])
 		shared(ubound)		 \
 		schedule(dynamic,1)	 \
 		reduction(+:runningcount)
-		for(i = 3; i < ubound; i += 2 ){
+		for(i = 1; i <= ubound; i += 2 ){
 			test = (int)sqrt((double)i);
 			for(j = 2; j <= test; j++){
 				if(i % j == 0){
@@ -35,7 +35,7 @@ int main (int argc, char *argv[])
 				runningcount++;
 			isprime = TRUE;
 		}
-	runningcount++;
+
 	printf("Found %d primes in the range 1 - %d\n", runningcount, ubound);
 }
 
