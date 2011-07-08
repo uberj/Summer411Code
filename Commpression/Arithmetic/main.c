@@ -31,7 +31,7 @@ int main( int argc, char **argv ) {
         in_file = fopen(fname, "r");
         out_file = fopen( o_fname, "w+");
         if(!out_file || !in_file ){
-            perror("Could not open file");
+            perror("Could not open file\n");
             return 1;
         }
 
@@ -54,12 +54,12 @@ int main( int argc, char **argv ) {
         fclose(in_file);
 
     } else if ( !strcmp(argv[1],"-x") ){
-        fprintf(stdout, "Extracting from file %s...", fname);
         out_file = fopen( fname, "r");
         if(!out_file){
-            perror("Could not open file");
+            perror("Could not open file\n");
             return 1;
         }
+        fprintf(stdout, "Extracting from file %s...\n", fname);
         //Eventuall we need to write to a file instead of stdout.
         fseek( out_file, 0 , SEEK_SET ); //Reset file
         mdl.out_fp = out_file;

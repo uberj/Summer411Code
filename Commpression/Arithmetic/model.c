@@ -9,7 +9,7 @@
 #include "model.h"
 #define SB 7
 #define MODEL_SIZE 254
-#define BUF_SIZE 100
+#define BUF_SIZE 110
 #define SYM_START 0
 #define META_SIZE 3+5 // Multiply this by # symbols to get starting of message
 // Better to over shoot. I'm using unsigned longs.
@@ -58,7 +58,7 @@ void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long hi
 
 int get_bit( struct model *mdl ) {
     unsigned char clean = 0; //Use this guy to get bit values
-    if ( de_code_pos >= 32)
+    if ( de_code_pos >= BUF_SIZE-1 )
         fill_bit_buff( mdl );
 
     switch ( bit_pos ) {
@@ -95,6 +95,7 @@ void fill_bit_buff( struct model *mdl ){
     int tell;
     fseek( mdl->out_fp, 3+5*(mdl->cardinality)+1, SEEK_SET );
     tell = ftell( mdl->out_fp);
+    printf("\n");
     printf("reading from pos %i in output\n",tell);
     fread( &de_code, sizeof(char), BUF_SIZE, mdl->out_fp );
     /*
@@ -128,7 +129,7 @@ void decode_with_model( struct model* mdl ) {
     int low_count;
     int decoded_count;
     //unsigned long low_count;
-    for( i=0; i < mdl->total+1 ; i++){
+    for( i=0; i < mdl->total ; i++){
         low_count = 0;
         id_value = find_char( mdl );
         for(sym = SYM_START ; low_count + mdl->symbols[sym] <= id_value; sym ++){
