@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/resource.h>
 
 #define TYPE int
 #define PRINTMAX 10
@@ -9,6 +10,12 @@
 
 void print_array(int **A, int order, char label){
 	int i, j;
+	const rlim_t kStackSize = 64L * 1024L * 1024L;
+	struct rlimit r1;
+	int result;
+
+	result = getrlimit(RLIMIT_STACK, &r1);
+	printf("r1.rlim_cur = %ld result = %ld\n",r1.rlim_cur,result);
 
 	if(order > PRINTMAX)
 		return;
