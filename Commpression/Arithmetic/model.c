@@ -136,8 +136,10 @@ void decode_with_model( struct model* mdl ) {
         }
         printf("%c",(char)sym);
         decoded_count++;
+        /*
         if(decoded_count == mdl->total+1)
             break;
+        */
         // Update our model.
         do_one_decode( mdl, low_count, low_count + mdl->symbols[sym] );
 

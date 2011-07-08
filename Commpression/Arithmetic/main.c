@@ -23,7 +23,8 @@ int main( int argc, char **argv ) {
         /* Create name for new compressed file */
         o_fname = (char *)malloc(strlen(fname)+4); // 4 extra?
         strcpy( o_fname, fname );
-        strcpy( o_fname+strlen(fname), ".acp" );
+        printf("o_fname: %s\n",o_fname);
+        strcat( o_fname, ".t" );
         printf( "Writing to file %s\n", o_fname );
 
 
