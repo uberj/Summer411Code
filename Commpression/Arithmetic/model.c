@@ -9,10 +9,12 @@
 #include "model.h"
 #define SB 7
 #define MODEL_SIZE 254
-#define BUF_SIZE 110
+#define BUF_SIZE 2
 #define SYM_START 0
 #define META_SIZE 3+5 // Multiply this by # symbols to get starting of message
 // Better to over shoot. I'm using unsigned longs.
+//
+static unsigned int file_offset; // This keeps a count that is used to multiply BUF_SIZE to walk through files.
 
 static unsigned char bit_buff;
 static unsigned char bit_pos;
@@ -21,6 +23,11 @@ static unsigned char de_code[BUF_SIZE];
 static unsigned int en_code_pos;
 static unsigned int de_code_pos;
 static unsigned int mBuffer;
+
+//Encoding vars
+unsigned short int mScale;
+unsigned short int mHigh;
+unsigned short int mLow;
 
 struct model {
     FILE *out_fp;
@@ -56,9 +63,20 @@ void decode_with_model( struct model* mdl );
 void fill_bit_buff( struct model *mdl );
 void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long high_count);
 
+void mask_out_bits( unsigned long *num ){
+    unsigned long mask=1;
+    // unsigned longs, on x86, are 4 bytes.
+    // push 1's out SB digets.
+    mask << SB;
+    printf("num before mask %lu\n",*num);
+    *num &= mask;
+    printf("num after mask %lu\n",*num);
+
+}
+
 int get_bit( struct model *mdl ) {
     unsigned char clean = 0; //Use this guy to get bit values
-    if ( de_code_pos >= BUF_SIZE-1 )
+    if ( de_code_pos >= BUF_SIZE )
         fill_bit_buff( mdl );
 
     switch ( bit_pos ) {
@@ -90,14 +108,22 @@ out:
 
 }
 void fill_bit_buff( struct model *mdl ){
-    //int i;
     //char sym;
     int tell;
-    fseek( mdl->out_fp, 3+5*(mdl->cardinality)+1, SEEK_SET );
+    int offset = 3+5*(mdl->cardinality)+1  +  BUF_SIZE*file_offset;
+    fseek( mdl->out_fp, offset, SEEK_SET );
     tell = ftell( mdl->out_fp);
-    printf("\n");
-    printf("reading from pos %i in output\n",tell);
+    //printf("\n");
+    //printf("reading from pos %i in output\n",tell);
+    bzero( &de_code, BUF_SIZE );
     fread( &de_code, sizeof(char), BUF_SIZE, mdl->out_fp );
+    /*
+    printf("Read in Buffer:\n");
+    for(i=0;i<BUF_SIZE;i++){
+        printf("%x ",de_code[i]);
+    }
+    printf("\n");
+    */
     /*
     for( i=0, sym = fgetc(mdl->out_fp); i < BUF_SIZE && sym != EOF ; i++, sym = fgetc(mdl->out_fp) ) {
         tell = ftell( mdl->out_fp);
@@ -109,7 +135,11 @@ void fill_bit_buff( struct model *mdl ){
     */
     de_code_pos = 0;
     bit_pos = 0;
+    file_offset++;
 
+}
+void bull(){
+    printf("h\n");
 }
 
 int find_char( struct model *mdl ) {
@@ -199,6 +229,7 @@ void init_decode( struct model *mdl ) {
     de_code_pos = 0;
     mdl->mHigh = 1 << SB;
     mdl->mLow = 0;
+    file_offset = 0;
     fill_bit_buff( mdl );
     // Put the first SB into the buffer.
     for( i = 0; i < SB; i++ ) { // This will totally break if we have less than SB bits.
@@ -243,6 +274,15 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
     unsigned long mStep = ( mHigh - mLow + 1 ) / total;
     mHigh   = mLow + mStep*high_count - 1;
     mLow    = mLow + mStep*low_count;
+    if( mStep == 0 ){
+        bull();
+        printf("3 h_c %lu\n",high_count);
+        printf("3 l_c %lu\n",low_count);
+        printf("3 mStep %lu\n",mStep);
+        printf("3 total %lu\n",total);
+        printf("3 mLow %lu\n",mLow);
+        printf("3 mHigh %lu\n",mHigh);
+    }
 
     //E1-E2 Scale
     while( ( mHigh < g_Half ) || ( mLow >= g_Half ) ) {
@@ -250,6 +290,7 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
             set_bit( mdl , 0 );
             mLow = mLow * 2;
             mHigh = mHigh * 2 + 1;
+
 
             // Check for E3
             for(;mScale > 0; mScale--){
@@ -296,7 +337,8 @@ void encode_with_model( FILE *fp, struct model* mdl ){
     fseek( mdl->out_fp, 3+5*(mdl->cardinality)+1, SEEK_SET );
     tell = ftell(mdl->out_fp);
     printf("Starting to write at %i bytes.\n", tell );
-    for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
+    for( sym = fgetc(fp); sym != EOF ; sym = fgetc(fp) ) {
+        printf("read %c\n",sym);
         // Caluculate low count
         low_count = 0;
         for(i = SYM_START ;(char)i<sym;i++){
@@ -310,19 +352,18 @@ void encode_with_model( FILE *fp, struct model* mdl ){
             i++;
         }
         do_one_encode( mdl, low_count, low_count + mdl->symbols[i], mdl->total );
-        printf("%c",sym);
     }
-    printf("\n");
     encode_finish( mdl );
 }
 
 void flush_bit_buff( struct model *mdl ) {
     int i,tell;
     en_code[en_code_pos] = bit_buff;
+    en_code_pos++;
     // Last write
     tell = ftell( mdl->out_fp);
-    printf("writing %x to pos %i in output\n",bit_buff,tell);
-    fwrite( &en_code, 1, BUF_SIZE, mdl->out_fp );
+    printf("writing final %x to pos %i in output\n",bit_buff,tell);
+    fwrite( &en_code, 1, en_code_pos, mdl->out_fp );
     en_code_pos++;
     //Debugging stuff
     printf("last byte: %d\n",bit_buff);
@@ -356,6 +397,8 @@ void set_bit( struct model *mdl, int bit ) {
         case 3:
             if ( bit )
                 bit_buff |= 0x8;
+            en_code[en_code_pos] = bit_buff;
+            en_code_pos++;
             // We need a new byte. Eventually we should store more than one byte. For now just write to file.
             if(en_code_pos >= BUF_SIZE) {
                 tell = ftell( mdl->out_fp);
@@ -363,9 +406,8 @@ void set_bit( struct model *mdl, int bit ) {
                 if (!fwrite( &en_code, 1, BUF_SIZE, mdl->out_fp ) ){
                     printf("CRAP");
                 }
+                en_code_pos = 0;
             }
-            en_code[en_code_pos] = bit_buff;
-            en_code_pos++;
             bit_buff = 0x0;
             bit_pos = 0;
             return; //Get out!
@@ -411,7 +453,7 @@ void populate_model( FILE *fp, struct model* mdl ) {
     // byte 2 is for the number of symbols represented. Write this value to
     // the file as the last thing done.
     fseek( mdl->out_fp, 1, SEEK_CUR );
-    for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
+    for( sym = fgetc(fp); sym != EOF ; sym = fgetc(fp) ) {
         mdl->symbols[(int)sym]++;
         mdl->total++;
     }
