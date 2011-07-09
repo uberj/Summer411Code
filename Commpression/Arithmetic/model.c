@@ -63,11 +63,23 @@ void decode_with_model( struct model* mdl );
 void fill_bit_buff( struct model *mdl );
 void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long high_count);
 
+/*
+ * This function is necissary because my algorithm is simulating 7 SB, while
+ * unsighned longs are 4 bytes.
+ *
+ */
 void mask_out_bits( unsigned long *num ){
-    unsigned long mask=1;
+    unsigned long mask = 0;
+    int i;
     // unsigned longs, on x86, are 4 bytes.
     // push 1's out SB digets.
-    mask << SB;
+    for(i=1;i<SB;i++){
+        mask += 1;
+        mask *= 2;
+    }
+    mask += 1;
+
+    printf("mask %lu\n",mask);
     printf("num before mask %lu\n",*num);
     *num &= mask;
     printf("num after mask %lu\n",*num);
@@ -197,6 +209,7 @@ void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long hi
             mLow = mLow * 2;
             mHigh = mHigh * 2 + 1;
             mBuffer = 2 * mBuffer + get_bit( mdl );
+
         } else if( mLow >= g_Half ) { //E2
             mLow = 2 * ( mLow - g_Half );
             mHigh = 2 * ( mHigh - g_Half ) + 1;
@@ -291,6 +304,8 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
             mLow = mLow * 2;
             mHigh = mHigh * 2 + 1;
 
+            mask_out_bits(&mLow);
+            mask_out_bits(&mHigh);
 
             // Check for E3
             for(;mScale > 0; mScale--){
@@ -300,6 +315,9 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
             set_bit( mdl, 1 );
             mLow = 2 * ( mLow - g_Half );
             mHigh = 2 * ( mHigh - g_Half ) + 1;
+
+            mask_out_bits(&mLow);
+            mask_out_bits(&mHigh);
 
             // Check for E3
             for(;mScale > 0; mScale--){
@@ -313,6 +331,9 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
         mScale++;
         mLow = 2 * ( mLow - g_FirstQuarter );
         mHigh = 2 * ( mHigh - g_FirstQuarter ) + 1;
+
+        mask_out_bits(&mLow);
+        mask_out_bits(&mHigh);
     }
 
     // Update model state
@@ -337,7 +358,7 @@ void encode_with_model( FILE *fp, struct model* mdl ){
     fseek( mdl->out_fp, 3+5*(mdl->cardinality)+1, SEEK_SET );
     tell = ftell(mdl->out_fp);
     printf("Starting to write at %i bytes.\n", tell );
-    for( sym = fgetc(fp); sym != EOF ; sym = fgetc(fp) ) {
+    for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
         printf("read %c\n",sym);
         // Caluculate low count
         low_count = 0;
@@ -453,7 +474,7 @@ void populate_model( FILE *fp, struct model* mdl ) {
     // byte 2 is for the number of symbols represented. Write this value to
     // the file as the last thing done.
     fseek( mdl->out_fp, 1, SEEK_CUR );
-    for( sym = fgetc(fp); sym != EOF ; sym = fgetc(fp) ) {
+    for( sym = fgetc(fp); sym != '\n' ; sym = fgetc(fp) ) {
         mdl->symbols[(int)sym]++;
         mdl->total++;
     }

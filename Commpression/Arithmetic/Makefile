@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -g -Wall
 
-objects = model.o main.o
+objects = main.o model.o  
 
 # This is the default rule
 arith.a: $(objects)
