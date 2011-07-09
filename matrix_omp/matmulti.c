@@ -1,14 +1,12 @@
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <sys/resource.h>
 
-#define TYPE int
+#define TYPE short
 #define PRINTMAX 10
 #define CHUNK 1
 
-void print_array(int **A, int order, char label){
+void print_array(TYPE **A, int order, char label){
 	int i, j;
 
 	if(order > PRINTMAX)
@@ -18,7 +16,7 @@ void print_array(int **A, int order, char label){
 
 	for(i = 0; i < order; i++){
 		for(j = 0; j < order; j++)
-			printf("[%d] ", A[i][j]);
+			printf("[%hd] ", A[i][j]);
 		printf("\n");
 	}
 }
