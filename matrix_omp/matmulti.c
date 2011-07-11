@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
 		}
 	}
         
-	#pragma omp parallel shared(A,B,C,order) private(i,j,tid)
+	#pragma omp parallel shared(A,B,C,order) private(i,j,k,tid)
 	{
 		tid = omp_get_thread_num();
 
