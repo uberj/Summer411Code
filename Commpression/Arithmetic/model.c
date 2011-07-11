@@ -79,10 +79,10 @@ void mask_out_bits( unsigned long *num ){
     }
     mask += 1;
 
-    printf("mask %lu\n",mask);
-    printf("num before mask %lu\n",*num);
+//    printf("mask %lu\n",mask);
+//    printf("num before mask %lu\n",*num);
     *num &= mask;
-    printf("num after mask %lu\n",*num);
+//    printf("num after mask %lu\n",*num);
 
 }
 
@@ -129,29 +129,13 @@ void fill_bit_buff( struct model *mdl ){
     //printf("reading from pos %i in output\n",tell);
     bzero( &de_code, BUF_SIZE );
     fread( &de_code, sizeof(char), BUF_SIZE, mdl->out_fp );
-    /*
-    printf("Read in Buffer:\n");
-    for(i=0;i<BUF_SIZE;i++){
-        printf("%x ",de_code[i]);
-    }
-    printf("\n");
-    */
-    /*
-    for( i=0, sym = fgetc(mdl->out_fp); i < BUF_SIZE && sym != EOF ; i++, sym = fgetc(mdl->out_fp) ) {
-        tell = ftell( mdl->out_fp);
-        printf("reading from pos %i in output\n",tell);
-        de_code[i] = sym;
-    }
-    if( sym == EOF )
-        de_code[i+1] = EOF;
-    */
     de_code_pos = 0;
     bit_pos = 0;
     file_offset++;
 
 }
 void bull(){
-    printf("h\n");
+    printf("HERE\n");
 }
 
 int find_char( struct model *mdl ) {
@@ -160,6 +144,9 @@ int find_char( struct model *mdl ) {
     unsigned long total = mdl->total;
 
     unsigned long mStep = ( mHigh - mLow + 1 ) / total;
+    if (mStep ==0){
+        return 1;
+    }
     return ( mBuffer - mLow ) / mStep;
 }
 
@@ -179,10 +166,6 @@ void decode_with_model( struct model* mdl ) {
         }
         printf("%c",(char)sym);
         decoded_count++;
-        /*
-        if(decoded_count == mdl->total+1)
-            break;
-        */
         // Update our model.
         do_one_decode( mdl, low_count, low_count + mdl->symbols[sym] );
 
@@ -201,7 +184,21 @@ void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long hi
     unsigned long mLow  = mdl->mLow;
     unsigned long mStep = ( mHigh - mLow + 1 ) / total;
     mHigh   = mLow + mStep*high_count - 1;
+    mask_out_bits(&mHigh);
     mLow    = mLow + mStep*low_count;
+    if(mHigh < mLow ){
+//        bull();
+        mLow = 0;
+        mHigh = 127;
+        /*
+        printf("3 h_c %lu\n",high_count);
+        printf("3 l_c %lu\n",low_count);
+        printf("3 mStep %lu\n",mStep);
+        printf("3 total %lu\n",total);
+        printf("3 mLow %lu\n",mLow);
+        printf("3 mHigh %lu\n",mHigh);
+        */
+    }
 
     //E1-E2 Scale
     while( ( mHigh < g_Half ) || ( mLow >= g_Half ) ) {
@@ -209,11 +206,16 @@ void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long hi
             mLow = mLow * 2;
             mHigh = mHigh * 2 + 1;
             mBuffer = 2 * mBuffer + get_bit( mdl );
+            mask_out_bits(&mLow);
+            mask_out_bits((unsigned long *)&mBuffer);
 
         } else if( mLow >= g_Half ) { //E2
             mLow = 2 * ( mLow - g_Half );
             mHigh = 2 * ( mHigh - g_Half ) + 1;
             mBuffer = 2 * ( mBuffer - g_Half ) + get_bit( mdl );
+            mask_out_bits(&mHigh);
+            mask_out_bits(&mLow);
+            mask_out_bits((unsigned long *)&mBuffer);
         }
     }
 
@@ -224,6 +226,9 @@ void do_one_decode( struct model *mdl, unsigned long low_count, unsigned long hi
         mHigh = 2 * ( mHigh - g_FirstQuarter ) + 1;
         mBuffer = 2 * ( mBuffer - g_FirstQuarter ) + get_bit( mdl );
     }
+    mask_out_bits((unsigned long *)&mBuffer);
+    mask_out_bits(&mHigh);
+    mask_out_bits(&mLow);
 
     // Update model state
     mdl->g_Half = g_Half;
@@ -287,8 +292,11 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
     unsigned long mStep = ( mHigh - mLow + 1 ) / total;
     mHigh   = mLow + mStep*high_count - 1;
     mLow    = mLow + mStep*low_count;
-    if( mStep == 0 ){
+    mask_out_bits(&mLow);
+    if( mHigh < mLow ){
         bull();
+        mLow = 0;
+        mHigh = 127;
         printf("3 h_c %lu\n",high_count);
         printf("3 l_c %lu\n",low_count);
         printf("3 mStep %lu\n",mStep);
@@ -304,8 +312,8 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
             mLow = mLow * 2;
             mHigh = mHigh * 2 + 1;
 
-            mask_out_bits(&mLow);
             mask_out_bits(&mHigh);
+            mask_out_bits(&mLow);
 
             // Check for E3
             for(;mScale > 0; mScale--){
@@ -316,8 +324,8 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
             mLow = 2 * ( mLow - g_Half );
             mHigh = 2 * ( mHigh - g_Half ) + 1;
 
-            mask_out_bits(&mLow);
             mask_out_bits(&mHigh);
+            mask_out_bits(&mLow);
 
             // Check for E3
             for(;mScale > 0; mScale--){
@@ -332,8 +340,8 @@ void do_one_encode( struct model *mdl, unsigned long low_count, unsigned long hi
         mLow = 2 * ( mLow - g_FirstQuarter );
         mHigh = 2 * ( mHigh - g_FirstQuarter ) + 1;
 
-        mask_out_bits(&mLow);
         mask_out_bits(&mHigh);
+        mask_out_bits(&mLow);
     }
 
     // Update model state
