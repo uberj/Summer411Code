@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
         prime[1]=1;
        
         //find primes then eliminate their multiples (0 = prime, 1 = composite)
-	#pragma omp parallel for private(c1,c2,c3)
+	#pragma omp parallel for private(c1,c2,c3) schedule(dynamic,1)
         for(c2 = 2;c2 <= (int)sqrt(i)+1;c2++){
                 if(prime[c2] == 0){
                         c1=c2;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
        
         //print primes
 	n = 0;
-	#pragma omp parallel for private(c1) reduction(+:n)
+	#pragma omp parallel for private(c1) reduction(+:n) schedule(dynamic,1)
         for(c1 = 0; c1 < i+1; c1++){
                 if(prime[c1] == 0) n++;
         }
