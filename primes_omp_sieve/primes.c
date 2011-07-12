@@ -2,42 +2,52 @@
 #include <stdlib.h>
 #include <math.h>
 #include <omp.h>
- 
+
+#define CHUNK 1
+#define COMPOSITE 't'
+#define PRIME 'f' 
+#define ARRAY_TYPE char
+#define INDEX_TYPE int
+
 int main(int argc, char *argv[])
 {
-        int i = atoi(argv[1]), n;
+        INDEX_TYPE i, n, c1, c2, c3;
+
+	if(argc < 2){
+		printf("usage: %s bound\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	i = atoi(argv[1]); 
   
         //create prime list
-        int *prime = (int*)calloc(i,sizeof(int));
-        int c1, c2, c3;
+        ARRAY_TYPE *prime = (ARRAY_TYPE*)calloc(i,sizeof(ARRAY_TYPE));
        
         //fill list with 0 - prime
         for(c1 = 2; c1 <= i; c1++){
-                prime[c1] = 0;
+                prime[c1] = PRIME;
         }
        
         //set 0 and 1 as not prime
-        prime[0]=1;
-        prime[1]=1;
+        prime[0]=COMPOSITE;
+        prime[1]=COMPOSITE;
        
         //find primes then eliminate their multiples (0 = prime, 1 = composite)
-	#pragma omp parallel for private(c1,c2,c3) schedule(dynamic,1)
+	#pragma omp parallel for private(c1,c2,c3) schedule(dynamic,CHUNK)
         for(c2 = 2;c2 <= (int)sqrt(i)+1;c2++){
-                if(prime[c2] == 0){
+                if(prime[c2] == PRIME){
                         c1=c2;
                         for(c3 = 2*c1;c3 <= i+1; c3 = c3+c1){
-                                prime[c3] = 1;
+                                prime[c3] = COMPOSITE;
                         }
                 }
         }
        
         //print primes
 	n = 0;
-	#pragma omp parallel for private(c1) reduction(+:n) schedule(dynamic,1)
+	#pragma omp parallel for private(c1) reduction(+:n) schedule(dynamic,CHUNK)
         for(c1 = 0; c1 < i+1; c1++){
-                if(prime[c1] == 0) n++;
+                if(prime[c1] == PRIME) n++;
         }
         printf("Number of primes: %d\n", n);
-       
-return 0;
 }
