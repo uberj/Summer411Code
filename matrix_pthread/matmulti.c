@@ -90,9 +90,13 @@ int main(int argc, char *argv[]){
 		printf("bad use pMult N & C > 0\n");	
 		return -1;	
         }
-	/* Create Matrices */
+	short *a, *b, *ab;
+	a = (short *)malloc(sizeof(short) * dim * dim);
+	b = (short *)malloc(sizeof(short) * dim * dim);
+	ab = (short *)malloc(sizeof(short) * dim * dim);
+	/* Create Matrices 
 	short a[dim * dim], b[dim * dim], ab[dim * dim];
-	for(i = 0; i < dim * dim; i++){
+  */    for(i = 0; i < dim * dim; i++){
 		a[i] = rand() % 2;
 	}
 	if(print) print_array(a, dim, dim);
@@ -101,7 +105,7 @@ int main(int argc, char *argv[]){
         }
 	if(print) print_array(b, dim, dim);            
         for(i = 0; i < dim * dim; i++){
-        	ab[i] = 0;
+        	a[i] = 0;
 	}
 	if(print) print_array(ab, dim, dim);
 
