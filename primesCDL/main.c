@@ -46,12 +46,12 @@ void *isPrimePara(void *datapass){
 	struct Data *data = (struct Data *)datapass;
 
 	for(i = 0; data->sVal + i < data->upperBound; i += (2 * NUM_THREADS)){
-        	if((div = isPrime(data->list, data->sVal + i)) == data->sVal + i){
-				struct Node *nPrimes = (struct Node *)malloc(sizeof(struct Node));
-				nPrimes->value = data->sVal + i;
-				pthread_mutex_lock(data->lock);
-				addList(data->list, nPrimes);
-				pthread_mutex_unlock(data->lock);
+		if((div = isPrime(data->list, data->sVal + i)) == data->sVal + i){
+			struct Node *nPrimes = (struct Node *)malloc(sizeof(struct Node));
+			nPrimes->value = data->sVal + i;
+			pthread_mutex_lock(data->lock);
+			addList(data->list, nPrimes);
+			pthread_mutex_unlock(data->lock);
 		}
 	}
 	pthread_exit((void *)data->tid);
