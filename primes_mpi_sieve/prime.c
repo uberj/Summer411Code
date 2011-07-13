@@ -16,7 +16,7 @@
 int main(int argc, char *argv[])
 {
         INDEX_TYPE i = 0, n, c1, c2, c3;
-	int mpiRank = 0; mpiSize = 1;
+	int mpiRank = 0, mpiSize = 1;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
