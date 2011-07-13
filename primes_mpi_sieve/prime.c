@@ -65,7 +65,10 @@ int main(int argc, char *argv[])
                         }
                 }
         }
-        
+
+	//allow all processes to finish
+        MPI_Barrier(MPI_COMM_WORLD);
+
         //print primes
 	if(mpiRank == 0){
 		n = 0;
