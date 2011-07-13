@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	if(mpiRank == 0){
 		n = 0;
         	for(c1 = 0; c1 < i+1; c1++)
-                	if(prime[c1] == PRIME) n++;
+                	if(prime_final[c1] == PRIME) n++;
         	printf("[Host %s] Number of primes: %d\n", processor_name, n);
 	}
 	MPI_Finalize();
