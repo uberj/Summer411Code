@@ -1,3 +1,7 @@
+/*
+ * Bounded prime numbers counter using the Sieve of Eratosthenes algorithm.
+ * Uses openMP for multi-threading.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -14,7 +18,7 @@ int main(int argc, char *argv[])
         INDEX_TYPE i, n, c1, c2, c3;
         
 	if(argc < 2){
-		printf("usage: %s bound\n", argv[0]);
+		printf("usage: %s b ound\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
@@ -31,7 +35,7 @@ int main(int argc, char *argv[])
 	for(c1 = 3; c1 <= i; c1 += 2)
 		prime[c1] = PRIME;
        
-        //set 0 and 1 as not prime
+        //set 0 and 1 as not prime; 2 as prime
         prime[0]=COMPOSITE;
         prime[1]=COMPOSITE;
         prime[2]=PRIME;
@@ -50,8 +54,8 @@ int main(int argc, char *argv[])
         //print primes
 	n = 0;
 	#pragma omp parallel for private(c1) reduction(+:n) schedule(dynamic,CHUNK)
-        for(c1 = 0; c1 < i+1; c1++){
+        for(c1 = 0; c1 < i+1; c1++)
                 if(prime[c1] == PRIME) n++;
-        }
-        fprintf(stderr, "Number of primes: %d\n", n);
+
+        printf("Number of primes: %d\n", n);
 }
