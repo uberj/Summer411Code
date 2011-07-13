@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	printf("[Host %s] mpiRank = %d\n", processor_name, mpiRank);
         
 	if(!mpiRank && argc < 2){
-		printf("usage: %s bound\nExiting.", argv[0]);
+		printf("[Host %s] usage: %s bound\nExiting.", processor_name, argv[0]);
 	} else {
 		i = atoi(argv[1]);
 	}
@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
 
         //find primes then eliminate their multiples (0 = prime, 1 = composite)
         for(c2 = (mpiRank * 2) + 3;c2 <= (int)sqrt(i)+1;c2 += mpiSize * 2){
+		printf("[Host %s] sieving %d\n", processor_name, c2);
                 if(prime[c2] == PRIME){
                         c1=c2;
                         for(c3 = 2*c1;c3 <= i+1; c3 = c3+c1){
