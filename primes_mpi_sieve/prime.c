@@ -16,11 +16,15 @@
 int main(int argc, char *argv[])
 {
         INDEX_TYPE i = 0, n, c1, c2, c3;
-	int mpiRank = 0, mpiSize = 1;
+	int namelen, mpiRank = 0, mpiSize = 1;
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+	MPI_Get_processor_name(processor_name, &namelen);
+
+	printf("[Host %s] mpiRank = %d\n", processor_name, mpiRank);
         
 	if(!mpiRank && argc < 2){
 		printf("usage: %s bound\nExiting.", argv[0]);
@@ -63,11 +67,11 @@ int main(int argc, char *argv[])
         }
         
         //print primes
-	if(!mpiRank){
+	if(mpiRank == 0){
 		n = 0;
         	for(c1 = 0; c1 < i+1; c1++)
                 	if(prime[c1] == PRIME) n++;
-        	printf("Number of primes: %d\n", n);
+        	printf("[Host %s] Number of primes: %d\n", processor_name, n);
 	}
 	MPI_Finalize();
 }
