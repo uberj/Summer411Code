@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
                         c1=c2;
                         for(c3 = 2*c1;c3 <= i+1; c3 = c3+c1){
                                 prime[c3] = COMPOSITE;
-				MPI_Bcast(&(prime[c3]), 1, MPI_INT, mpiRank, MPI_COMM_WORLD);
+				MPI_Bcast(&(prime[c3]), 1, MPI_CHAR, mpiRank, MPI_COMM_WORLD);
                         }
                 }
         }
