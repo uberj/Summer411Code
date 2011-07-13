@@ -8,9 +8,9 @@
 #include <mpi.h>
 
 #define CHUNK 1
-#define COMPOSITE 't'
-#define PRIME 'f' 
-#define ARRAY_TYPE char
+#define COMPOSITE 1
+#define PRIME 0 
+#define ARRAY_TYPE int
 #define INDEX_TYPE int
 
 int main(int argc, char *argv[])
@@ -62,13 +62,14 @@ int main(int argc, char *argv[])
                         c1=c2;
                         for(c3 = 2*c1;c3 <= i+1; c3 = c3+c1){
                                 prime[c3] = COMPOSITE;
-				printf("[Host %s] %d is composite.\n", processor_name, c3);
-				MPI_Bcast(&(prime[c3]), 1, MPI_CHAR, mpiRank, MPI_COMM_WORLD);
+				//printf("[Host %s] %d is composite.\n", processor_name, c3);
+				//MPI_Bcast(&(prime[c3]), 1, MPI_CHAR, mpiRank, MPI_COMM_WORLD);
                         }
                 }
         }
 
 	//allow all processes to finish
+	MPI_Allreduce(prime, prime, i, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 
         //print primes
