@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
  
  	if(SLAVE){
         	//find primes then eliminate their multiples (0 = prime, 1 = composite)
-        	for(c2 = (mpiRank * 2) + 3;c2 <= (int)sqrt(i)+1;c2 += mpiSize * 2){
+        	for(c2 = ((mpiRank - 1) * 2) + 3;c2 <= (int)sqrt(i)+1;c2 += (mpiSize - 1) * 2){
                 	if(prime[c2] == PRIME){
                         	c1=c2;
                         	for(c3 = 2*c1; c3 <= i; c3 = c3+c1){
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
                 	}
         	}
 		MPI_Send(&finished, 1, MPI_INT, 0, TAG_INIT, MPI_COMM_WORLD);
-	} else { //this is the master
+	} else {
         	while(mpiSize > 1){
 			MPI_Recv(&temp, 1, MPI_INT, MPI_ANY_SOURCE, TAG_INIT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			if(temp)
