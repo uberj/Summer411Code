@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   
         //create prime list
         ARRAY_TYPE *prime = (ARRAY_TYPE*)calloc(i+1,sizeof(ARRAY_TYPE));
-        ARRAY_TYPE *prime_final = (ARRAY_TYPE*)calloc(i+1,sizeof(ARRAY_TYPE));
+        //ARRAY_TYPE *prime_final = (ARRAY_TYPE*)calloc(i+1,sizeof(ARRAY_TYPE));
         
 	//fill all evens in list with composite
         for(c1 = 2; c1 <= i; c1 += 2)
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	if(MASTER){
 		n = 0;
         	for(c1 = 0; c1 < i+1; c1++)
-                	if(prime_final[c1] == PRIME) n++;
+                	if(prime[c1] == PRIME) n++;
         	printf("[Host %s] Number of primes: %d\n", processor_name, n);
 	}
 	MPI_Finalize();
