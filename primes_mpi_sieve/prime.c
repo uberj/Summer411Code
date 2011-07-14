@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
                 if(prime[c2] == PRIME){
                         c1=c2;
                         for(c3 = 2*c1; c3 <= i; c3 = c3+c1){
-                                prime[c3] = COMPOSITE;i
+                                prime[c3] = COMPOSITE;
 				MPI_Reduce(prime, prime_final, c3, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
                         }
                 }
