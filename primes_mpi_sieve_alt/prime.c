@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[])
 {
-        int index, prime, first, low_value, count, global_count, size = 0;
+        int i, index, prime, first, low_value, count, global_count, size = 0;
 	int temp, namelen, mpiRank = 0, mpiSize = 1;
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
         
@@ -42,11 +42,11 @@ int main(int argc, char *argv[])
 	}
   
         //create prime list
-        ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(i+1,sizeof(ARRAY_TYPE));
+        ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
         
 	//fill all odds in list with prime
 	for (i = 0; i < i; i++)
-		marked[c1] = PRIME;
+		marked[i] = PRIME;
        
         if (MASTER)
 		index = 0;
@@ -68,8 +68,7 @@ int main(int argc, char *argv[])
 			prime = index + 2;
 		}
 		MPI_Bcast(&prime, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	}
-	while (prime * prime <= n);
+	} while (prime * prime <= size);
 	count = 0;
 	for (i = 0; i < size; i++){
 		if (!marked[i])
