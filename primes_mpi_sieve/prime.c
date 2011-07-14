@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	}
 
 	MPI_Bcast(&i, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
 	
 	if(!i){
 		MPI_Finalize();
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
         }
 
 	//allow all processes to finish
-	MPI_Allreduce(prime, prime_final, i+1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Reduce(prime, prime_final, i+1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 
         //print primes
