@@ -13,8 +13,9 @@ void print_bn( struct b_number *bn );
  */
 void convert_file_to_bn( FILE *fp , struct b_number** bn ){
     char num;
-    long double result, x;
     int f_size,i;
+    long double result,max;
+    unsigned long int size;
     struct b_number temp;
     struct b_number* n1;
     struct b_number* n2;
@@ -29,10 +30,11 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
 
 
     n1 = (struct b_number*) malloc(sizeof(struct b_number));
-    x = 2;
-    result = log(f_size) / log(x);
-    printf("Optimal size: %Lg\n",result);
-    n1->size = result / (int) 1;
+    max = pow(10,f_size+1);
+    result = ( (long double)log(max)/(long double)log(2) ) + 1;
+    size = result / (sizeof(unsigned long int)*8);
+    n1->size = size+1;
+    printf("Optimal size: %lu\n",n1->size);
     n1->block_list = (unsigned long int*) calloc(n1->size,sizeof(unsigned long int));
 
     // Make copies
@@ -60,9 +62,9 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
         if( f_size == 0 )
             break;
         n2 = clone( 1, n1 );
-        printf("Added new number: ");
-        print_bn( n1 );
-        printf("Mult by 10...\n");
+        //printf("Added new number: ");
+        //print_bn( n1 );
+        //printf("Mult by 10...\n");
         /*
          * n2 is the cumilator. add n1 to 10 times (9 in reality due to it already being at n1*1.
          */
@@ -71,6 +73,7 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
             free(n2->block_list);
             free(n2);
             n2 = n3;
+       //     printf("Number after add\n");
         //    print_bn( n2 );
         }
 
