@@ -65,7 +65,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
      * where the smaller number doesn exist
      */
     carry = done = 0;
-    while ( done < small_num->size ){
+    while ( done < small_num->size ){ // Until we are at a stable state
         for( i = 0; i < small_num->size ; i++ ) {
             if( !( add_chain.links[i].flags & 0x2 ) ) { // Check if initial sum is complete
                 // Do initial sum
@@ -88,10 +88,11 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
                     carry = c_add( &temp_carry, &sum->block_list[i], &sum->block_list[i] );
                     if ( carry )
                         add_chain.links[i].flags |= 0x1; // Set carry out bit
-                    // Check flags.
-                    if( add_chain.links[i].flags & 0x2 ) // Being paranoid...
-                        add_chain.links[i].flags |= 0x4;
-                        done++;
+                }
+                // Check flags. And say we are finished
+                if( add_chain.links[i].flags & 0x2 ) { // Being paranoid...
+                    add_chain.links[i].flags |= 0x4;
+                    done++;
                 }
             }
             if( add_chain.links[large_num->size-1].flags & 0x1 ){ // Does the last link in the chain have a carry?
