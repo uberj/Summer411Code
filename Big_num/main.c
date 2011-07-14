@@ -1,26 +1,41 @@
 #include <stdio.h>
+#include "read.c"
 
-int main() {
+int main( int argc, char **argv ) {
+    struct b_number* bn1;
+    struct b_number* bn2;
+    struct b_number* sum;
+    char fname[30];
+    FILE *fp;
+    strcpy(fname,"ascii_big_num1.txt");
+    fp = fopen(fname, "r");
+    convert_file_to_bn( fp, &bn1 );
+    fclose(fp);
+    print_bn(bn1);
+    // Second number
+    strcpy(fname,"ascii_big_num2.txt");
+    fp = fopen(fname, "r");
+    convert_file_to_bn( fp, &bn2 );
+    fclose(fp);
+    print_bn(bn2);
+    
+    sum = b_add( bn2, bn1 );
+    printf("Sum is:\n");
+    print_bn(sum);
+    printf("bn2 is:\n");
+    print_bn(bn2);
 
-    long unsigned int arg1, arg2, add, sub, mul, quo, rem ;
-    int carry = 0;
+    return 0;
+    // Do add.
 
-    printf( "Enter two integer numbers : " );
-    scanf( "%lu%lu", &arg1, &arg2 );
-
-    /* Perform Addition, Subtraction, Multiplication & Division */
-    __asm__ (   "addl %%ebx, %%ecx;"
-                "movl $0x0, %%eax;"
-                "adc $0x0, %%eax;"
-                : "=c" (add), "=a" (carry)
-                : "b" (arg1) , "c" (arg2)
-
-            );
-
-    printf( "%lu + %lu = %lu\n", arg1, arg2, add );
-    if(carry){
-        printf("Carry bit was set\n");
-    }
-
+    /*
+    unsigned long int i,sum,c_sum;
+    i=1;
+    sum=0;
+    c_sum = 2;
+    c_add(&c_sum,&i,&sum);
+    printf("Sum was: %lu\n",sum);
     return 0 ;
+    */
 }
+
