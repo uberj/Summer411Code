@@ -59,19 +59,16 @@ int main(int argc, char *argv[])
  
         //find primes then eliminate their multiples (0 = prime, 1 = composite)
         for(c2 = (mpiRank * 2) + 3;c2 <= (int)sqrt(i)+1;c2 += mpiSize * 2){
-		//printf("[Host %s] sieving %d\n", processor_name, c2);
                 if(prime[c2] == PRIME){
                         c1=c2;
                         for(c3 = 2*c1; c3 <= i; c3 = c3+c1){
-                                prime[c3] = COMPOSITE;
-				//printf("[Host %s] %d is composite.\n", processor_name, c3);
-				//MPI_Bcast(&(prime[c3]), 1, MPI_CHAR, mpiRank, MPI_COMM_WORLD);
+                                prime[c3] = COMPOSITE;i
+				MPI_Reduce(prime, prime_final, c3, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
                         }
                 }
         }
 
 	//allow all processes to finish
-	MPI_Reduce(prime, prime_final, i+1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 
         //print primes
