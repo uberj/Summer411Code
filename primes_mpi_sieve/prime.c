@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 		//printf("[Host %s] sieving %d\n", processor_name, c2);
                 if(prime[c2] == PRIME){
                         c1=c2;
-                        for(c3 = 2*c1;c3 <= i+1; c3 = c3+c1){
+                        for(c3 = 2*c1; c3 <= i; c3 = c3+c1){
                                 prime[c3] = COMPOSITE;
 				//printf("[Host %s] %d is composite.\n", processor_name, c3);
 				//MPI_Bcast(&(prime[c3]), 1, MPI_CHAR, mpiRank, MPI_COMM_WORLD);
