@@ -55,9 +55,7 @@ int main(int argc, char *argv[])
         prime[0]=COMPOSITE;
         prime[1]=COMPOSITE;
         prime[2]=PRIME;
-
-	memcpy(prime_final, prime, i * sizeof(ARRAY_TYPE)); 
-
+ 
         //find primes then eliminate their multiples (0 = prime, 1 = composite)
         for(c2 = (mpiRank * 2) + 3;c2 <= (int)sqrt(i)+1;c2 += mpiSize * 2){
 		printf("[Host %s] sieving %d\n", processor_name, c2);
@@ -72,7 +70,7 @@ int main(int argc, char *argv[])
         }
 
 	//allow all processes to finish
-	MPI_Allreduce(prime, prime_final, i, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce(prime, prime_final, i+1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 
         //print primes
