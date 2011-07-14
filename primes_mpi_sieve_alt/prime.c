@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 		MPI_Bcast(&prime, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	} while (prime * prime <= size);
 	count = 0;
-	for (i = 0; i < size; i++){
+	for (i = 0; i < size; i++)
 		if (!marked[i])
 			count++;
 	MPI_Reduce (&count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
