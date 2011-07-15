@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 			else
 				first = prime - (low_value % prime);
 		}
-		fprintf(stderr, "[Host %s] sieving %d\n", processor_name, prime);
+		fprintf(stderr, "[Host %s] sieving %d\n", processor_name, first);
 		for (i = first; i < size; i+= prime)
 			marked[i] = COMPOSITE; 
 		if (MASTER) {
