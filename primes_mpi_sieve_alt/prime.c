@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 		MPI_Finalize();
 		exit(EXIT_FAILURE);
 	}
-        size = (n / mpiSize) + 1;
+        size = n;
         //create prime list
         ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
         
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		index = 0;
 	prime = 2;
  
- 	low_value = mpiRank;
+ 	low_value = (2 * mpiRank) + 3;
  	do {
 		if (prime * prime > low_value)
 			first = prime * prime - low_value;
