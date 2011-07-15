@@ -4,25 +4,32 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <mpi.h>
+#include <math.h>
+
+#define MIN(a,b) ((a)<(b)?(a):(b))
 
 #define COMPOSITE 1
 #define PRIME 0 
-#define ARRAY_TYPE int
+#define ARRAY_TYPE char
 
-#define MASTER mpiRank == 0
-#define SLAVE mpiRank != 0
+#define MASTER(id) (id == 0)
+#define SLAVE(id) (id != 0)
+
+#define BLOCK_LOW(id,p,n) ((id) * (n) / (p))
+#define BLOCK_HIGH(id,p,n) (BLOCK_LOW((id) + 1, p, n) - 1)
+#define BLOCK_SIZE(id,p,n) (BLOCK_LOW((id)+1) - BLOCK_LOW(id))
+#define BLOCK_OWNER(index,p,n) (((p)*((index)+1)-1)/(n))
 
 int main(int argc, char *argv[])
 {
-        int i, index, prime, first, low_value, count, global_count, size, n = 0;
-	int temp, namelen, mpiRank = 0, mpiSize = 1;
+        int i, index, prime, first, low_value, high_value, proc0_size, count, global_count, size, n = 0;
+	int temp, namelen, id, p;
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
         
 	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
-	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &id);
+	MPI_Comm_size(MPI_COMM_WORLD, &p);
 	MPI_Get_processor_name(processor_name, &namelen);
         
 	if (MASTER && argc < 2)
@@ -31,18 +38,34 @@ int main(int argc, char *argv[])
 		n = atoi(argv[1]);
 	}
 
-	MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	//MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 	
 	if (!n) {
 		MPI_Finalize();
 		exit(EXIT_FAILURE);
 	}
-        size = n / mpiSize;
-	low_value = mpiRank * size / mpiSize;
+
+        low_value = 2 + BLOCK_LOW(id,p,n-1);
+	high_value = 2 + BLOCK_HIGH(id,p,n-1);
+	size = BLOCK_SIZE(id,p,n-1);
+
+	proc0_size = (n-1)/p;
+
+	if ((2 + proc0_size) < (int)sqrt((double) n)){
+		 if (MASTER) printf("Too many processes\n");
+		 MPI_Finalize();
+		 exit(1);
+	}
+
         //create prime list
         ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
-        
+        if (marked == NULL) {
+		printf("[Host %s] Cannot allocate enough memory.\n", processor_name);
+		MPI_Finalize();
+		exit(1);
+	}
+
 	//fill out list with 0
 	for (i = 0; i < size; i++)
 		marked[i] = PRIME;
