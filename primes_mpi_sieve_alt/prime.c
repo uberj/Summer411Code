@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[])
 {
-        int i, index, prime, first, low_value, count, global_count, size = 0;
+        int i, index, prime, first, low_value, count, global_count, size, n = 0;
 	int temp, namelen, mpiRank = 0, mpiSize = 1;
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
         
@@ -28,30 +28,31 @@ int main(int argc, char *argv[])
 	if (MASTER && argc < 3)
 		printf("[Host %s] usage: %s bound low_value\nExiting.", processor_name, argv[0]);
 	else if (MASTER) {
-		size = atoi(argv[1]);
+		n = atoi(argv[1]);
 		low_value = atoi(argv[2]);
 	}
 
-	MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&low_value, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 	
-	if (!size) {
+	if (!n) {
 		MPI_Finalize();
 		exit(EXIT_FAILURE);
 	}
-  
+        size = (n / mpiSize) + 1;
         //create prime list
         ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
         
-	//fill all odds in list with prime
-	for (i = 0; i < i; i++)
+	//fill out list with 0
+	for (i = 0; i < size; i++)
 		marked[i] = PRIME;
        
         if (MASTER)
 		index = 0;
 	prime = 2;
  
+ 	low_value = (mpiRank * 2) + 3;
  	do {
 		if (prime * prime > low_value)
 			first = prime * prime - low_value;
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
 			prime = index + 2;
 		}
 		MPI_Bcast(&prime, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	} while (prime * prime <= size);
+	} while (prime * prime <= n);
 	count = 0;
 	for (i = 0; i < size; i++)
 		if (!marked[i])
