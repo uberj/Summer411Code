@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         low_value = 2 + BLOCK_LOW(id,p,n-1);
 	high_value = 2 + BLOCK_HIGH(id,p,n-1);
 	size = BLOCK_SIZE(id,p,n-1);
-        fprintf(stderr, "[Host %s] low_value = %d | high_value = %d\n", processor_name, low_value, high_value);
+        fprintf(stderr, "[Host %s][id %d] low_value = %d | high_value = %d\n", processor_name, id, low_value, high_value);
 	proc0_size = (n-1)/p;
 
 	if ((2 + proc0_size) < (int)sqrt((double) n)){
