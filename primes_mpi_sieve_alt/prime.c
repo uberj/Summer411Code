@@ -7,8 +7,8 @@
 #include <math.h>
 #include <mpi.h>
 
-#define COMPOSITE 0
-#define PRIME 1 
+#define COMPOSITE 1
+#define PRIME 0 
 #define ARRAY_TYPE int
 
 #define MASTER mpiRank == 0
