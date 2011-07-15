@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         if (MASTER(id))
 		index = 0;
 	prime = 2;
- 
+        fprintf(stderr, "[Host %s] starting.\n", processor_name);
  	do {
 		if (prime * prime > low_value)
 			first = prime * prime - low_value;
@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < size; i++)
 		if (!marked[i])
 			count++;
+	fprintf(stderr, "[Host %s] finished.\n", processor_name);
 	MPI_Reduce (&count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 
