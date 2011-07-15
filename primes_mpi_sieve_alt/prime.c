@@ -25,15 +25,13 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
 	MPI_Get_processor_name(processor_name, &namelen);
         
-	if (MASTER && argc < 3)
-		printf("[Host %s] usage: %s bound low_value\nExiting.", processor_name, argv[0]);
+	if (MASTER && argc < 2)
+		printf("[Host %s] usage: %s bound\nExiting.", processor_name, argv[0]);
 	else if (MASTER) {
 		n = atoi(argv[1]);
-		low_value = atoi(argv[2]);
 	}
 
 	MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&low_value, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 	
 	if (!n) {
@@ -62,8 +60,9 @@ int main(int argc, char *argv[])
 			else
 				first = prime - (low_value % prime);
 		}
+		fprintf(stderr, "[Host %s] sieving %d\n", processor_name, prime);
 		for (i = first; i < size; i+= prime)
-			marked[i] = COMPOSITE;
+			marked[i] = COMPOSITE; 
 		if (MASTER) {
 			while(marked[++index]);
 			prime = index + 2;
