@@ -18,7 +18,7 @@
 
 #define BLOCK_LOW(id,p,n) ((id) * (n) / (p))
 #define BLOCK_HIGH(id,p,n) (BLOCK_LOW((id) + 1, p, n) - 1)
-#define BLOCK_SIZE(id,p,n) (BLOCK_LOW((id)+1) - BLOCK_LOW(id))
+#define BLOCK_SIZE(id,p,n) (BLOCK_LOW((id)+1,p,n) - BLOCK_LOW(id,p,n))
 #define BLOCK_OWNER(index,p,n) (((p)*((index)+1)-1)/(n))
 
 int main(int argc, char *argv[])
@@ -32,13 +32,13 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
 	MPI_Get_processor_name(processor_name, &namelen);
         
-	if (MASTER && argc < 2)
+	if (MASTER(id) && argc < 2)
 		printf("[Host %s] usage: %s bound\nExiting.", processor_name, argv[0]);
-	else if (MASTER) {
+	else if (MASTER(id)) {
 		n = atoi(argv[1]);
 	}
 
-	//MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 	
 	if (!n) {
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	proc0_size = (n-1)/p;
 
 	if ((2 + proc0_size) < (int)sqrt((double) n)){
-		 if (MASTER) printf("Too many processes\n");
+		 if (MASTER(id)) printf("Too many processes\n");
 		 MPI_Finalize();
 		 exit(1);
 	}
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < size; i++)
 		marked[i] = PRIME;
        
-        if (MASTER)
+        if (MASTER(id))
 		index = 0;
 	prime = 2;
  
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "[Host %s] sieving %d\n", processor_name, first);
 		for (i = first; i < size; i+= prime)
 			marked[i] = COMPOSITE; 
-		if (MASTER) {
+		if (MASTER(id)) {
 			while(marked[++index]);
 			prime = index + 2;
 		}
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
 
         //print primes
-	if(MASTER){
+	if(MASTER(id)){
         	printf("[Host %s] Number of primes: %d\n", processor_name, global_count);
 	}
 	MPI_Finalize();
