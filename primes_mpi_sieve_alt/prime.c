@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		index = 0;
 	prime = 2;
  
- 	low_value = (mpiRank * 2) + 3;
+ 	low_value = mpiRank;
  	do {
 		if (prime * prime > low_value)
 			first = prime * prime - low_value;
