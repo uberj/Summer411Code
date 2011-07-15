@@ -23,11 +23,9 @@
 
 int main(int argc, char *argv[])
 {
-        int i, index, prime, first, low_value, proc0_size, count, global_count, n = 0;
-	int temp, namelen, id, p;
+        unsigned long int i, index, prime, first, low_value, proc0_size, count, global_count, size, high_value, n = 0;
+	int namelen, id, p;
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
-	int size;
-        unsigned long int high_value;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -51,7 +49,7 @@ int main(int argc, char *argv[])
         low_value = 2 + BLOCK_LOW(id,p,n-1);
 	high_value = 2 + BLOCK_HIGH(id,p,n-1);
 	size = BLOCK_SIZE(id,p,n-1);
-        fprintf(stderr, "[Host %s][id %d/%d] n = %d | low_value = %d | high_value = %lu\n", processor_name, id, p, n, low_value, high_value);
+        fprintf(stderr, "[Host %s][id %d/%d] n = %lu | low_value = %lu | high_value = %lu\n", processor_name, id, p, n, low_value, high_value);
 	proc0_size = (n-1)/p;
 
 	if ((2 + proc0_size) < (int)sqrt((double) n)){
@@ -59,7 +57,7 @@ int main(int argc, char *argv[])
 		 MPI_Finalize();
 		 exit(1);
 	}
-        fprintf(stderr, "[Host %s] Allocating a %d element char array...", processor_name, size);
+        fprintf(stderr, "[Host %s] Allocating a %lu element char array...", processor_name, size);
         //create prime list
         ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
         if (marked == NULL) {
@@ -107,7 +105,7 @@ int main(int argc, char *argv[])
 
         //print primes
 	if(MASTER(id)){
-        	printf("[Host %s] Number of primes: %d\n", processor_name, global_count);
+        	printf("[Host %s] Number of primes: %lu\n", processor_name, global_count);
 	}
 	MPI_Finalize();
 }
