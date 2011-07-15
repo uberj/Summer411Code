@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
         size = n / mpiSize;
-	low_value = mpiRank + 2;
+	low_value = mpiSize - mpiRank;
         //create prime list
         ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
         
