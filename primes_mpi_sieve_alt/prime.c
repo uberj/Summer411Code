@@ -23,9 +23,10 @@
 
 int main(int argc, char *argv[])
 {
-        int i, index, prime, first, low_value, high_value, proc0_size, count, global_count, size, n = 0;
+        int i, index, prime, first, low_value, high_value, proc0_size, count, global_count, n = 0;
 	int temp, namelen, id, p;
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	unsigned long int size;
         
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
