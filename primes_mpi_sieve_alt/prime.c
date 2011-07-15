@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	proc0_size = (n-1)/p;
 
 	if ((2 + proc0_size) < (int)sqrt((double) n)){
-		 if (MASTER(id)) printf("Too many processes\n");
+		 if (MASTER(id)) printf("[Host %s] Too many processes.\n", processor_name);
 		 MPI_Finalize();
 		 exit(1);
 	}
@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
 			else
 				first = prime - (low_value % prime);
 		}
-		fprintf(stderr, "[Host %s] sieving %d\n", processor_name, first);
 		for (i = first; i < size; i+= prime)
 			marked[i] = COMPOSITE; 
 		if (MASTER(id)) {
