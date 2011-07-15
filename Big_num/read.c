@@ -6,6 +6,10 @@
 
 void print_bn( struct b_number *bn );
 
+void convert_bn_to_file( FILE *fp, struct b_number** bn ){
+
+}
+
 /*
  * Take a file (fp) and convert it's ascii representation (base 10)
  * of a number into a binary representation and store it in the bn
