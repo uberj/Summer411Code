@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 		 MPI_Finalize();
 		 exit(1);
 	}
-
+        fprintf(stderr, "[Host %s] Allocating a %d element char array...", processor_name, size);
         //create prime list
         ARRAY_TYPE *marked = (ARRAY_TYPE*)calloc(size,sizeof(ARRAY_TYPE));
         if (marked == NULL) {
@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
 		MPI_Finalize();
 		exit(1);
 	}
+	fprintf(stderr, "finished\n"); 
 
 	//fill out list with 0
 	for (i = 0; i < size; i++)
