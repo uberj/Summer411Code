@@ -19,7 +19,7 @@ LIBS     += -lm
 CFLAGS   += 
 LDFLAGS  += $(LIBS)
 PROGRAM   = Life
-SRCS      = Life.c
+SRCS      = Life.c XLife.c
 
 ifndef NO_X11
 LIBS     += -lX11
