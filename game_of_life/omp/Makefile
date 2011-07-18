@@ -11,13 +11,15 @@
 # Variables and Flags
 #
 
+# NO_X11 = 1
+
 CC        = gcc
 
 LIBS     += -lm
 CFLAGS   += -fopenmp
 LDFLAGS  += $(LIBS)
 PROGRAM   = Life
-SRCS      = Life.c
+SRCS      = Life.c XLife.c
 
 ifndef NO_X11
 LIBS     += -lX11
