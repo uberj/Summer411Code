@@ -21,6 +21,9 @@ struct chain {
 };
 
 int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* sum );
+void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum);
+void b_divide_one(  struct b_number* numer, struct b_number* denom, \
+                struct b_number* quot, struct b_number* remainder );
 
 /*
  * Add n1 + n2 = sum
@@ -29,17 +32,9 @@ int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* 
  *
  */
 struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
-    unsigned long int done,carry,i,temp_carry;
     struct b_number* large_num;
     struct b_number* small_num;
     struct b_number* sum;
-    struct chain add_chain;
-    /*
-     * n14 n13 n12 n11
-     * +   n23 n22 n21
-     * _______________
-     */
-    // Decide who is bigger.
     if( n1->size < n2->size ){
         small_num = n1;
         large_num = n2;
@@ -51,6 +46,25 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
     sum = (struct b_number*) malloc(sizeof(struct b_number));
     sum->block_list = calloc(large_num->size,sizeof(unsigned long int));
     sum->size = large_num->size;
+    b_add_one( small_num, large_num, sum );
+    return sum;
+
+}
+
+/*
+ * Add small_num to large_num. Store in sum.
+ * @precondition: sum needs to be the same size or larger than large_num.
+ *
+ */
+void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum){
+    unsigned long int done,carry,i,temp_carry,extra;
+    struct chain add_chain;
+    /*
+     * n14 n13 n12 n11
+     * +   n23 n22 n21
+     * _______________
+     */
+    // Decide who is bigger.
 
     add_chain.links = calloc(large_num->size, sizeof(struct link));
     /*
@@ -65,7 +79,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
      * where the smaller number doesn exist
      */
     carry = done = 0;
-    while ( done < small_num->size ){
+    while ( done < small_num->size ){ // Until we are at a stable state
         for( i = 0; i < small_num->size ; i++ ) {
             if( !( add_chain.links[i].flags & 0x2 ) ) { // Check if initial sum is complete
                 // Do initial sum
@@ -88,34 +102,48 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
                     carry = c_add( &temp_carry, &sum->block_list[i], &sum->block_list[i] );
                     if ( carry )
                         add_chain.links[i].flags |= 0x1; // Set carry out bit
-                    // Check flags.
-                    if( add_chain.links[i].flags & 0x2 ) // Being paranoid...
-                        add_chain.links[i].flags |= 0x4;
-                        done++;
                 }
-            }
-            if( add_chain.links[large_num->size-1].flags & 0x1 ){ // Does the last link in the chain have a carry?
-                // Create new block in sum, inc size
-                printf("Overflow in last block...\n");
+                // Check flags. And say we are finished
+                if( add_chain.links[i].flags & 0x2 ) { // Being paranoid...
+                    add_chain.links[i].flags |= 0x4;
+                    done++;
+                }
             }
         } // end for
     } // end while
 
-    /* While there is still a cary in the upper blocks of sum, add.
-     * I can't see how this could be done in parallel.
+    if( add_chain.links[large_num->size-1].flags & 0x1 ){ // Does the last link in the chain have a carry?
+        // Create new block in sum, inc size
+        //printf("Overflow in last block...\n");
+    }
+    /*
+     * If n1 and n2 were different sizes and there was no carry in the 
+     * upper blocks, we need to copy the rest of bigger number into the
+     * sum. Pick up where the loop above left off. For now (with no linked
+     * list, a memcpy will work.
      */
-    for( i=small_num->size ; i<large_num->size; i++ ){
-        temp_carry = 1; //Paranoid
-        if ( add_chain.links[i-1].flags & 0x1 ) {
-            carry = c_add( &temp_carry, &sum->block_list[i], &sum->block_list[i] );
-            if ( carry )
-                add_chain.links[i].flags |= 0x1; // Set carry out bit
-        } else {
-            break;
+    if (large_num->size > small_num->size){
+        extra = large_num->size - small_num->size;
+        memcpy( &add_chain.sum->block_list[small_num->size], \
+                &large_num->block_list[small_num->size], \
+                extra*sizeof(unsigned long int) );
+        /* While there is still a cary in the upper blocks of sum, add.
+         * I can't see how this could be done in parallel.
+         */
+        for( i=small_num->size ; i<large_num->size; i++ ){
+            temp_carry = 1; //Paranoid
+            if ( add_chain.links[i-1].flags & 0x1 ) {
+                carry = c_add( &temp_carry, &sum->block_list[i], &sum->block_list[i] );
+                if ( carry )
+                    add_chain.links[i].flags |= 0x1; // Set carry out bit
+            } else {
+                break;
+            }
+        }
+        // We need this much overflow
+        if( extra > 0 ){
         }
     }
-
-    return sum;
 
 }
 
@@ -154,6 +182,186 @@ struct b_number* clone( int copy, struct b_number* orig ){
 }
 
 /*
- * Calculate the two's compliment of a number.
+ * Pass in two bn's possible created by clone() and copy_bn
+ * will make the two identical. First copy (int)-> Second
  */
-struct b_number* two_comp( struct b_number n );
+void bn_copy( struct b_number* n1, struct b_number* n2 ) {
+    n2->size = n1->size;
+    n2->id = n1->id;
+    memcpy(&n2->block_list[0],&n1->block_list[0],(n1->size)*sizeof(unsigned long int));
+}
+
+/*
+ * Convert a number into it's two's compliment.
+ */
+void two_comp( struct b_number** n ){
+    struct b_number temp;
+    struct b_number *new;
+    unsigned long int i;
+    temp.size = 1;
+    temp.block_list = malloc(sizeof(unsigned long int));
+    temp.block_list[0] = 1L;
+    // Thread this shit!
+    for( i=0; i< (*n)->size; i++ ){
+        (*n)->block_list[i] = ~( (*n)->block_list[i] ); // Not all the values
+    }
+    new = b_add( *n, &temp );
+    free((*n)->block_list);
+    free(*n);
+    *n = new;
+    
+}
+
+/*
+ * multiply n1 by mult. Right now only the first unsigned long int is used.
+ * Eventually it shuould use the entire bit b_number.
+ * @Return n1 multiplied by mult->block_list[0]
+ */
+void b_mult( struct b_number *mult, struct b_number *n1 ){
+    int i;
+    struct b_number *b1;
+    struct b_number *b2;
+
+    b1 = clone( 1, n1 );
+    b2 = clone( 1, n1 );
+    // b1 and b2 are clones of n1
+    // b2 stays constant ( the original value of n1 )
+    // n1 becomes the sum of b1 and b2.
+    // n1 is copied into b1
+    for( i=1; i< mult->block_list[0]; i++ ){
+        b_add_one( b1, b2, n1 );
+        //n1 = b1 + b2
+        bn_copy(n1,b1);  
+    }
+}
+
+/*
+ * Compare two numbers
+ * @return:
+ *  0 equal
+ *  -1 first one is bigger
+ *  1 second one is bigger
+ */
+int b_compare( struct b_number *n1, struct b_number *n2 ){
+    int i;
+    struct b_number *small_num; // These are refereing to bit size, not value.
+    struct b_number *large_num;
+
+    if( n1->size < n2->size ){
+        small_num = n1;
+        large_num = n2;
+    } else {
+        small_num = n2;
+        large_num = n1;
+    }
+
+    // If anything exist in large_num in it's upper blocks, it's value is larger.
+    for( i = large_num->size-1 ; i >= small_num->size ; i-- ){
+        // Starting at the msb of large_num
+        if(large_num->block_list[i] != 0){
+            // Determine who large_num is.
+            if (large_num == n1) {
+                //large_num is n1
+                return -1;
+            } else {
+                //large_num is n2
+                return 1;
+            }
+        }
+    }
+    // Now look for a bigger block in either of the two numbers. If no difference is found
+    // the two numbers are equal
+    for( i = small_num->size -1; i>=0; i-- ) {
+        if( n1->block_list[i] > n2->block_list[i] ) {
+            return -1;
+        } else if( n2->block_list[i] > n1->block_list[i] ){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Incriment n by one.
+ */
+void b_inc( struct b_number *n ){
+    int carry,i;
+    unsigned long int one,sum;
+    one = 1;
+
+    for( i=0; i<n->size; i++ ){
+        carry = c_add( &one, &n->block_list[i], &n->block_list[i]);
+        if(!carry)
+            break;
+    }
+
+}
+
+/*
+ * Division. Pass b_number's numer (numerator) and denom (denominator).
+ * Also pass b_number pointers quot (quotent) and remainder (I think you get the picture).
+ * @returns:
+ *  numer/denom = quot, remainder
+ * @post-cond:
+ *  Numer is mutated. There should probably be a wrapper written.
+ *  User is responsible for freeing quot and remainder.
+ */
+
+void b_divide(  struct b_number* numer, struct b_number* denom, \
+                struct b_number** quot, struct b_number** remainder ) {
+
+
+    (*quot) = (struct b_number *) malloc(sizeof(struct b_number));
+    (*remainder) = (struct b_number *) malloc(sizeof(struct b_number));
+
+    // q_size <= sizeof( numer ) - sizeof( denom ) + 1
+    // ^ random theory
+    (*quot)->size = numer->size - denom->size + 1;
+    (*remainder)->size = denom->size;
+
+    //Allocate block_list's
+    (*quot)->block_list = (unsigned long int*) calloc((*quot)->size,(*quot)->size*sizeof(unsigned long int));
+    (*remainder)->block_list = (unsigned long int*) calloc((*remainder)->size,(*remainder)->size*sizeof(unsigned long int));
+
+    b_divide_one( numer, denom, *quot, *remainder );
+
+}
+
+void b_divide_one(  struct b_number* numer, struct b_number* denom, \
+                struct b_number* quot, struct b_number* remainder ) {
+
+    struct b_number* twos_denom; // The denomenators two's compliment used for subtraction.
+    struct b_number* sum; // temp sum var.
+    struct b_number* swap; // Pretty much a swap var. :)
+    // Sanity checking
+    if( b_compare(numer,denom) == 1) { // Is the denom > numer?
+        return;
+    } else if ( b_compare(numer,denom) == 0) { // Are they equal?
+        quot->block_list[0] = 1;
+        return;
+    }
+
+    twos_denom = clone( 0, numer ); // Make a copy. It has to be size of numer because we need the over flow bit to work it's magic.
+    // Now copy in all the bits in denom .
+    memcpy(twos_denom->block_list, denom->block_list, numer->size * sizeof(unsigned long int));
+    two_comp(&twos_denom); // Convert to two's compliment.
+    sum = clone( 0, numer);
+
+
+    while( b_compare( numer, denom ) <= 0 ) { // while numer > denom
+        /*
+         * TODO This is going to be done very clumsily with the old add function.
+         * Replace this when the new add is written.
+         */
+        b_add_one( numer, twos_denom, sum );
+        swap = numer;
+        numer = sum;
+        memset(swap->block_list,0,swap->size); //Paranoid again
+        sum = swap;
+        b_inc(quot);
+
+    }
+
+    // Move the rest of numer into remainer.
+    memcpy(remainder->block_list,numer->block_list,(remainder->size)*sizeof(unsigned long int));
+}
