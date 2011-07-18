@@ -26,19 +26,19 @@ Methuselahs, Guns, Puffers and Rakes.
 RULES OF GAME OF LIFE
 The game revolves around 4 simple rules:
 
-1.	Any living cell with less than “LOWER_THRESH” 
+1.	Any living cell with less than LOWER_THRESH 
 (deafult: 2) live neighbors dies, as if it was caused 
 by under-population.
 
-2.	Any living cell with more than “UPPER_THRESH” 
+2.	Any living cell with more than UPPER_THRESH 
 (default: 3) live neighbors dies, as of it was caused by 
 over-population (overcrowding).
 
 3.	Any living cell with neighbors in between 
-“LOWER_THRESH” and “UPPER_THRESH” lives on to 
+LOWER_THRESH and UPPER_THRESH lives on to 
 the next generation.
 
-4.	Any dead cell with “SPAW_THRESH” (default: 3) 
+4.	Any dead cell with SPAW_THRESH (default: 3) 
 alive neighbors, will became alive too, as if 
 it was by reproduction.
 
@@ -56,8 +56,7 @@ COMMAND LINE OPTIONS
 
 #================================================================#
 OUTPUT
-	When utilizing X11 the output should resemble the picture 
-on the right. There are examples of patterns in the program's 
+	There are examples of patterns in the program's 
 folder, such as the Oscillators, Gosper Glider Gun and etc. 
 To visualize the examples use the "-i" option (input file). 
 If the output file option is used, a file will be created with the 
@@ -66,7 +65,7 @@ generation simulated.
 
 #================================================================#
 FILES
-#===Defaults.h===#
+#===Life.h===#
 This file contains the definition of all the variables, 
 used in the program:
 
@@ -96,7 +95,7 @@ variable's number then the cell dies, as of isolation
 int SPAWN_TRESH - If a dead cell has neighbors equals to this 
 variable's number then the cell comes alive.
  
-#===Life.h===#
+#===Life.c===#
 int init(struct life_t * life, int * c, char *** v);
 -	Initializes all the variables and if using X11 it 
 creates the window.
@@ -149,7 +148,6 @@ size of the grid, or information (-h)
 void usage ();
 -	Contains the command line options text.
 
-#===Life.c===#
 	Initializes Life object which contains all the variables 
 used in this program. This file also has a loop that runs through 
 N-Generations. The loop contains all the instructions 
@@ -159,7 +157,7 @@ N-Generations. The loop contains all the instructions
 	Contain instructions to compile the Game of Life 
 automatically, using all the necessary files, flag and etc.
 
-#===XLife.h===#
+#===XLife.c===#
 	Contains all the necessary functions to create a X11 
 window that display the right number of rows and columns 
 based on the information that is set on the other Life files.
