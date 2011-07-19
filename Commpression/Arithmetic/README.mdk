@@ -1,0 +1,27 @@
+USAGE:
+======
+flags:  -c Compress
+        -x De-compress
+
+make
+./run -c <file_to_compress>
+
+./run -x <file_you_compresses>.t
+
+EXAMPLE:
+========
+
+./run -c chr6.fa
+(creates a binary chr6.fa.t file)
+./run -x chr6.fa.t
+(prints file as it is decompressed)
+
+NOTES:
+======
+As of right now decompression is written to stdout. I stopped working on this because it was non-trivial to parrallelize. At the time other goals seemed more reasonable.
+
+Beware of compressing very large files, as this will take a while.
+
+Due to bad planning and not really knowing how an arithmetic coder worked, all the code is in model.c and is not very elegant. There are interesting edge cases that happen when you try to encode very large files with many symbols using a low bit count in your encoding buffer. I'd be curious to see how real world applications handle these cases. Do they partition the file to be compressed?
+
+Compression algorithms like COMPRESS (used in gzip) use a hybrid of compression algorithms (COMPRESS uses Huffman and lzw coding). Arithmetic is very much like Huffman coding and is probably similarly capable of being part of a hybrid compression solution. It is worth noting that Arithmetic coding is more efficient than Huffman coding.
