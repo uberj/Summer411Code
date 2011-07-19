@@ -1,6 +1,8 @@
 
 USAGE:
 ======
+flags:  -c Compress
+        -x De-compress
 
 make
 ./run -c <file_to_compress>
