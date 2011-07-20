@@ -204,7 +204,7 @@ void allocate_grids (struct life_t * life)
 void init_grids (struct life_t * life) 
 {
 	FILE * fd;
-	int i,j;
+	int i,j,temp;
 
 	if (life->infile != NULL) {
 		if ((fd = fopen(life->infile, "r")) == NULL) {
@@ -217,6 +217,12 @@ void init_grids (struct life_t * life)
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	// resize so each process is in charge of a vertical slice of the whole board
+        temp = life->ncols;
+	life->ncols = life->ncols / life->size;
+	if(life->rank < (temp % life->size)) // pass out the remaining cols
+		life->ncols++;	
 
 	allocate_grids(life);
 
@@ -250,14 +256,18 @@ void write_grid (struct life_t * life)
 	int ncols   = life->ncols;
 	int nrows   = life->nrows;
 	int ** grid = life->grid;
+	MPI_Status status;
+	char buffer[20];
+	int collect_tag = 123131242;
 
-	if (life->outfile != NULL) {
+	// first write the masters data points to file
+	if (!life->rank && life->outfile){
 		if ((fd = fopen(life->outfile, "w")) == NULL) {
 			perror("Failed to open file for output");
 			exit(EXIT_FAILURE);
 		}
 
-		fprintf(fd, "%d %d\n", ncols, nrows);
+		//fprintf(fd, "%d %d\n", ncols, nrows);
 
 		for (i = 1; i <= ncols; i++) {
 			for (j = 1; j <= nrows; j++) {
@@ -265,9 +275,35 @@ void write_grid (struct life_t * life)
 					fprintf(fd, "%d %d\n", i, j);
 			}
 		}
-
 		fclose(fd);
 	}
+
+	// collect datapoints from each node and write them to file
+	if (!life->rank && life->outfile){
+		if ((fd = fopen(life->outfile, "a")) == NULL) {
+			perror("Failed to open file for output");
+			exit(EXIT_FAILURE);
+		}
+		for (i = 1; i < life->size; i++){
+			while(1){
+				MPI_Recv(buffer, 20, MPI_CHAR, i, collect_tag, MPI_COMM_WORLD, &status);
+				if(buffer[0] == '\0') break;
+				fprintf(fd, "%s\n", buffer);
+			}
+		}
+		fclose(fd);
+	} else {
+		for (i = 1; i <= ncols; i++) {
+			for (j = 1; j <= nrows; j++) {
+				if (grid[i][j] != DEAD){
+                                        sprintf(buffer,"%d %d", i, j); 
+					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
+				}
+			}
+		}
+		buffer[0] = '\0';
+		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD); //let the master know this process is finished
+	}			
 }
 
 /*
@@ -303,6 +339,7 @@ void randomize_grid (struct life_t * life, double prob)
 	int ncols = life->ncols;
 	int nrows = life->nrows;
 
+	fprintf(stderr, "This process is randomizing its grid using ncols = %d and nrows = %d.\n", ncols, nrows);
 	for (i = 1; i <= ncols; i++) {
 		for (j = 1; j <= nrows; j++) {
 			if (rand_double() < prob)
