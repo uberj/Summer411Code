@@ -303,6 +303,7 @@ void randomize_grid (struct life_t * life, double prob)
 	int ncols = life->ncols;
 	int nrows = life->nrows;
 
+	fprintf(stderr, "This process is randomizing its grid using ncols = %d and nrows = %d.\n", ncols, nrows);
 	for (i = 1; i <= ncols; i++) {
 		for (j = 1; j <= nrows; j++) {
 			if (rand_double() < prob)
