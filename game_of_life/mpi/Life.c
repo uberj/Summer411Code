@@ -256,24 +256,56 @@ void write_grid (struct life_t * life)
 	int ncols   = life->ncols;
 	int nrows   = life->nrows;
 	int ** grid = life->grid;
+	MPI_Status status;
+	char buffer[20];
+	int collect_tag = 123131242;
 
-	if (life->outfile != NULL) {
-		if ((fd = fopen(life->outfile, "w")) == NULL) {
+	// first write the masters data points to file
+	if (life->rank == 0){
+		if (life->outfile != NULL) {
+			if ((fd = fopen(life->outfile, "w")) == NULL) {
+				perror("Failed to open file for output");
+				exit(EXIT_FAILURE);
+			}
+
+			//fprintf(fd, "%d %d\n", ncols, nrows);
+
+			for (i = 1; i <= ncols; i++) {
+				for (j = 1; j <= nrows; j++) {
+					if (grid[i][j] != DEAD)
+						fprintf(fd, "%d %d\n", i, j);
+				}
+			}
+			fclose(fd);
+		}
+	}
+
+	// collect datapoints from each node and write them to file
+	if (life->rank == 0){
+		if ((fd = fopen(life->outfile, "a")) == NULL) {
 			perror("Failed to open file for output");
 			exit(EXIT_FAILURE);
 		}
-
-		fprintf(fd, "%d %d\n", ncols, nrows);
-
-		for (i = 1; i <= ncols; i++) {
-			for (j = 1; j <= nrows; j++) {
-				if (grid[i][j] != DEAD)
-					fprintf(fd, "%d %d\n", i, j);
+		for (i = 1; i < life->size; i++){
+			while(1){
+				MPI_Recv(buffer, 20, MPI_CHAR, i, collect_tag, MPI_COMM_WORLD, &status);
+				if(buffer[0] == '\0') break;
+				fprintf(fd, "%s\n", buffer);
 			}
 		}
-
 		fclose(fd);
-	}
+	} else {
+		for (i = 1; i <= ncols; i++) {
+			for (j = 1; j <= nrows; j++) {
+				if (grid[i][j] != DEAD){
+                                        sprintf(buffer,"%d %d", i, j); 
+					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD, &status);
+				}
+			}
+		}
+		buffer[0] = '\0';
+		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD, &status); //let the master know this process is finished
+	}			
 }
 
 /*
