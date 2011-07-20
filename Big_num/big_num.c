@@ -26,6 +26,10 @@ void b_divide_one(  struct b_number* numer, struct b_number* denom, \
                 struct b_number* quot, struct b_number* remainder );
 void b_dec( struct b_number *n );
 int b_compare( struct b_number *n1, struct b_number *n2 );
+void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
+                struct b_number* quot, struct b_number* remainder );
+void b_fast_div(  struct b_number* numer, struct b_number* denom, \
+                struct b_number** quot, struct b_number** remainder );
 
 /*
  * Add n1 + n2 = sum
@@ -56,6 +60,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
 /*
  * Add small_num to large_num. Store in sum.
  * @precondition: sum needs to be the same size or larger than large_num.
+ * @Note: b2 + b1 = b2 <- this will work
  *
  */
 void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum){
@@ -508,9 +513,9 @@ void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *
         else
             index = index / 2;
     }
-    printf("SB found in In block %lu, bit %lu\n",i,j);
-    *block = i - (n->size);
-    *bit = j ;
+    //printf("SB found in In block %lu, bit %lu\n",i,j);
+    *block = i;
+    *bit = j;
 }
 
 /*
@@ -525,6 +530,18 @@ unsigned long int b_msb( struct b_number* n) {
     sb_check( n, &n_size, &n_bit);
     return n_size * 32 + n_bit;
 }
+
+
+void b_fast_div(  struct b_number* numer, struct b_number* denom, \
+                struct b_number** quot, struct b_number** remainder ) {
+
+    *quot = clone( 0, numer );
+    bzero( (*quot)->block_list , (*quot)->size * sizeof( unsigned long int ));
+    *remainder = clone( 0, denom );
+    bzero( (*remainder)->block_list , (*remainder)->size * sizeof( unsigned long int ));
+    b_fast_div_one( numer, denom, *quot, *remainder);
+}
+
 /*
  * Optimized division - It's fast
  */
@@ -532,7 +549,8 @@ unsigned long int b_msb( struct b_number* n) {
 void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
                 struct b_number* quot, struct b_number* remainder ) {
     unsigned long int shift, adjust;
-    unsigned long int msb_n, msb_np, msb_d, msb_d;
+    unsigned long int msb_n, msb_d;
+    int i;
     /*
      * msb = most significant bit
      * msb_[n,d] = constants, only calculated once
@@ -540,14 +558,30 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
      */
     struct b_number* n_pr; //numerator prime
     struct b_number* d_pr; //denominator prime
+    struct b_number* temp_exp; // Used as result for b_expn
+    struct b_number two; // Big number used for expn
+    struct b_number b_shift; // Big number used for expn
     msb_n = b_msb(numer);
     msb_d = b_msb(denom);
     
-    quote = clone( 0, numer );
-    remainder = clone( 0, denom );
+    /*
+     * Intialize all utility Big nums
+     */
 
     n_pr = clone( 1, numer );
-    d_pr = clone( 0, denom );
+    d_pr = clone( 0, numer );
+    bzero( d_pr->block_list , d_pr->size * sizeof( unsigned long int ));
+    memcpy( d_pr->block_list, denom->block_list, denom->size*sizeof(unsigned long int));
+
+    two.size = 1;
+    two.block_list = (unsigned long int*) malloc(sizeof(unsigned long int));
+    two.block_list[0] = 2;
+
+    b_shift.size = 1;
+    b_shift.block_list =(unsigned long int*) malloc(sizeof(unsigned long int));
+
+    temp_exp = clone( 0, numer );
+    bzero( temp_exp->block_list , temp_exp->size * sizeof( unsigned long int ));
     
     // Initial up shifting
     shift = msb_n - msb_d - 1;
@@ -558,30 +592,53 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
 
     // The down shifting
     adjust = 0;
-    while( b_msb( n_pr ) <= b_msb( denom ) ) {
+    while( b_msb( n_pr ) >= b_msb( denom ) ) {
         shift = shift - adjust;
         while( b_msb( n_pr ) > b_msb( d_pr ) ) {
+            two_comp( &d_pr );
             // n_pr = n_pr - d_pr
+            b_add_one( n_pr, d_pr, n_pr );
+            two_comp( &d_pr );
             // quot = quot + b_exp(2, shift)
+            b_shift.block_list[0] = shift;
+            b_expn( &two, &b_shift, temp_exp );
+            b_add_one(quot, temp_exp, quot);
+            bzero( temp_exp->block_list , temp_exp->size * sizeof( unsigned long int ));
         }
         if( b_msb( n_pr ) <= b_msb( denom ) )
-            goto out;
+            goto last_divide;
 
         adjust = b_msb( d_pr ) - b_msb( n_pr ) + 1;
         
         for( i = 0; i < adjust ; i++ ){
             if( b_msb( d_pr ) <= msb_d )
-                goto out;
+                goto last_divide;
             b_rshift( d_pr );
         }
     }
+    goto out;
+
+    // This would be messy edge case in that ^ loop.
+last_divide:
+    while( b_compare( n_pr, d_pr ) <= 0 ) { // while numer > denom
+            two_comp( &d_pr );
+            b_add_one( n_pr, d_pr, n_pr );
+            b_inc( quot );
+            two_comp( &d_pr );
+    }
+    
 
 
 out:
     if( b_compare( n_pr, d_pr ) == 0 ) {
         // quot += b_expr(shift)
+        b_shift.block_list[0] = shift;
+        b_expn( &two, &b_shift, temp_exp );
+        remainder->block_list[0] = 0;
+        b_inc(quot);
     } else {
         // remainder = n_pr
+        memcpy(remainder->block_list, n_pr->block_list, remainder->size*sizeof(unsigned long int));        
     }
 
 }
