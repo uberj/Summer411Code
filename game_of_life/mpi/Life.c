@@ -204,7 +204,7 @@ void allocate_grids (struct life_t * life)
 void init_grids (struct life_t * life) 
 {
 	FILE * fd;
-	int i,j;
+	int i,j,temp;
 
 	if (life->infile != NULL) {
 		if ((fd = fopen(life->infile, "r")) == NULL) {
@@ -217,6 +217,12 @@ void init_grids (struct life_t * life)
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	// resize so each process is in charge of a vertical slice of the whole board
+        temp = life->ncols;
+	life->ncols = life->ncols / life->size;
+	if(life->rank < (temp % life->size)) // pass out the remaining cols
+		life->ncols++;	
 
 	allocate_grids(life);
 
