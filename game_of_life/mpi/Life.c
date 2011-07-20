@@ -299,12 +299,12 @@ void write_grid (struct life_t * life)
 			for (j = 1; j <= nrows; j++) {
 				if (grid[i][j] != DEAD){
                                         sprintf(buffer,"%d %d", i, j); 
-					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD, &status);
+					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
 				}
 			}
 		}
 		buffer[0] = '\0';
-		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD, &status); //let the master know this process is finished
+		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD); //let the master know this process is finished
 	}			
 }
 
