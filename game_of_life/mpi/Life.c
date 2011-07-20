@@ -261,27 +261,25 @@ void write_grid (struct life_t * life)
 	int collect_tag = 123131242;
 
 	// first write the masters data points to file
-	if (life->rank == 0){
-		if (life->outfile != NULL) {
-			if ((fd = fopen(life->outfile, "w")) == NULL) {
-				perror("Failed to open file for output");
-				exit(EXIT_FAILURE);
-			}
-
-			//fprintf(fd, "%d %d\n", ncols, nrows);
-
-			for (i = 1; i <= ncols; i++) {
-				for (j = 1; j <= nrows; j++) {
-					if (grid[i][j] != DEAD)
-						fprintf(fd, "%d %d\n", i, j);
-				}
-			}
-			fclose(fd);
+	if (!life->rank && life->outfile){
+		if ((fd = fopen(life->outfile, "w")) == NULL) {
+			perror("Failed to open file for output");
+			exit(EXIT_FAILURE);
 		}
+
+		//fprintf(fd, "%d %d\n", ncols, nrows);
+
+		for (i = 1; i <= ncols; i++) {
+			for (j = 1; j <= nrows; j++) {
+				if (grid[i][j] != DEAD)
+					fprintf(fd, "%d %d\n", i, j);
+			}
+		}
+		fclose(fd);
 	}
 
 	// collect datapoints from each node and write them to file
-	if (life->rank == 0){
+	if (!life->rank && life->outfile){
 		if ((fd = fopen(life->outfile, "a")) == NULL) {
 			perror("Failed to open file for output");
 			exit(EXIT_FAILURE);
