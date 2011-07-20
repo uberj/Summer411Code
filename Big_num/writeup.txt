@@ -1,0 +1,5 @@
+BIG Number Implementation.
+
+The ability to add two numbers in parallel by adding individual chunks and tracking carry bits has inspired us to write a "parallel" big number implementation. Eventually there is a possibility that one could expand a number's state to multiple nodes, taking advantage of our Intel cluster.
+
+As a lab for the 411 students it would be possible to give them functioning non-parallelized code. Their jobs would be to find spots in the code where threading via Openmp or Pthreads would be appropriate. A timed comparison could display the efficiency gains to having multiple cores working on the same problem.

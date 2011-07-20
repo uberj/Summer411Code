@@ -24,6 +24,8 @@ int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* 
 void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum);
 void b_divide_one(  struct b_number* numer, struct b_number* denom, \
                 struct b_number* quot, struct b_number* remainder );
+void b_dec( struct b_number *n );
+int b_compare( struct b_number *n1, struct b_number *n2 );
 
 /*
  * Add n1 + n2 = sum
@@ -42,7 +44,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
         small_num = n2;
         large_num = n1;
     }
-    // Creat the new big number
+    // Great the new big number
     sum = (struct b_number*) malloc(sizeof(struct b_number));
     sum->block_list = calloc(large_num->size,sizeof(unsigned long int));
     sum->size = large_num->size;
@@ -209,18 +211,26 @@ void two_comp( struct b_number** n ){
     free((*n)->block_list);
     free(*n);
     *n = new;
-    
 }
 
 /*
- * multiply n1 by mult. Right now only the first unsigned long int is used.
- * Eventually it shuould use the entire bit b_number.
- * @Return n1 multiplied by mult->block_list[0]
+ * @Return n1 multiplied by mult
+ * Side affects: mult is brought down to zero.
+ * TODO Optimize: Since we are doing a cheap repetative adds, you should
+ * only decrement the smaller of the two (n1 or mult).
+ *
  */
 void b_mult( struct b_number *mult, struct b_number *n1 ){
-    int i;
+    //int i;
     struct b_number *b1;
     struct b_number *b2;
+    struct b_number *p_mult; // Copy of mult
+    struct b_number zero;
+    zero.size = 1;
+    zero.block_list = malloc(sizeof(unsigned long int));
+    zero.block_list[0] = 0;
+    p_mult = clone( 1, mult);
+
 
     b1 = clone( 1, n1 );
     b2 = clone( 1, n1 );
@@ -228,10 +238,13 @@ void b_mult( struct b_number *mult, struct b_number *n1 ){
     // b2 stays constant ( the original value of n1 )
     // n1 becomes the sum of b1 and b2.
     // n1 is copied into b1
-    for( i=1; i< mult->block_list[0]; i++ ){
+    b_dec( p_mult ); // We start at mult*1
+    while( b_compare( p_mult, &zero ) == -1 ) {
         b_add_one( b1, b2, n1 );
         //n1 = b1 + b2
-        bn_copy(n1,b1);  
+        bn_copy(n1,b1);
+        //n1 -> b1
+        b_dec( p_mult );
     }
 }
 
@@ -286,7 +299,7 @@ int b_compare( struct b_number *n1, struct b_number *n2 ){
  */
 void b_inc( struct b_number *n ){
     int carry,i;
-    unsigned long int one,sum;
+    unsigned long int one;
     one = 1;
 
     for( i=0; i<n->size; i++ ){
@@ -295,6 +308,109 @@ void b_inc( struct b_number *n ){
             break;
     }
 
+}
+
+/*
+ * Decriment n by one.
+ */
+void b_dec( struct b_number *n ){
+    int i;
+
+    for( i=0; i<n->size; i++ ){
+        if(n->block_list[i] == 0) {
+            n->block_list[i] = ~n->block_list[i];
+        } else {
+            n->block_list[i]--;
+            break;
+        }
+    }
+
+}
+
+/*
+ * Shift to the right >> (Divide by 2)
+ */
+void b_rshift( struct b_number *n ){
+    int i,prev_carry,carry;
+    unsigned long int lsb = 1L;
+    unsigned long int msb = 0x80000000;
+
+    prev_carry = carry = 0;
+    for( i=n->size-1; i >= 0; i-- ){
+        if (n->block_list[i] == 0) {
+            if ( prev_carry )
+                n->block_list[i] |= msb;
+            prev_carry = carry = 0;
+            continue;
+        } else {
+            if ( lsb & n->block_list[i] )
+                carry = 1;
+            // Shift it up.
+            n->block_list[i] = n->block_list[i] >> 1;
+            if ( prev_carry )
+                n->block_list[i] |= msb;
+            prev_carry = carry;
+            carry = 0;
+        }
+    }
+}
+/*
+ * Shift to the left << (Multiply by 2)
+ */
+void b_lshift( struct b_number *n ){
+    int i,prev_carry,carry;
+    unsigned long int msb = 0x80000000;
+
+    prev_carry = carry = 0;
+    for( i=0; i<n->size; i++ ){
+        if (n->block_list[i] == 0) {
+            if ( prev_carry )
+                n->block_list[i]++;
+            prev_carry = carry = 0;
+            continue;
+        } else {
+            if ( msb & n->block_list[i])
+                carry = 1;
+            // Shift it up.
+            n->block_list[i] = n->block_list[i] << 1;
+            if ( prev_carry )
+                n->block_list[i]++;
+            prev_carry = carry;
+            carry = 0;
+        }
+    }
+}
+
+/*
+ * Exponentiate: The hacked non-optimized version (repitition and multiplication)
+ * If you pass in a result with an existing struct make sure it's size > 0. b_expn
+ * will not touch it and just use the existing struct if result->size > 0. If it 
+ * is zero a result struct of arbitrary size should be allocated.
+ *
+ * @precondition: result is zeroed out and a reasonable size.
+ */
+
+void b_expn( struct b_number *base, struct b_number *exp, struct b_number *result ) {
+    struct b_number zero;
+    zero.size = 1;
+    zero.block_list = malloc(sizeof(unsigned long int));
+    zero.block_list[0] = 0;
+
+    result->block_list[0] = 1;
+    if( result->size == 0 )
+        printf("1b_expn sanity check failed\n");
+
+    while( b_compare( &zero, exp ) != 0 ){
+        b_mult( base, result );
+        b_dec( exp );
+    }
+}
+
+void _b_expn_test ( struct b_number *base, struct b_number *exp, struct b_number **result) {
+    *result = (struct b_number*)malloc(sizeof(struct b_number));
+    (*result)->size = 8; //Something reasonable
+    (*result)->block_list = (unsigned long int*) calloc((*result)->size,(*result)->size*sizeof(unsigned long int));
+    b_expn( base, exp, *result );
 }
 
 /*
@@ -364,4 +480,108 @@ void b_divide_one(  struct b_number* numer, struct b_number* denom, \
 
     // Move the rest of numer into remainer.
     memcpy(remainder->block_list,numer->block_list,(remainder->size)*sizeof(unsigned long int));
+}
+
+
+/*
+ * sb_check: A function to help with b_fast_div. To make division faster
+ * we need to know when the number we are sqauring is just a little bit
+ * larger than the number it's going to be subtracted from. I.e. If the
+ * number being divided is n bits, we want to know when the number being
+ * squared is n-1 bits and stop squaring it.
+ *
+ * This function's job is to return the posistion of MSB
+ *
+ */
+void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *bit ){
+    unsigned long int i,j,index;
+    // Find the highest block that is not zero
+    for( i = (n->size)-1; i>=0; i--){
+        if( n->block_list[i] > 0 )
+            break;
+    }
+    // We found a non zero block. Check were the MSB is
+    index = pow(2,sizeof(unsigned long int)*8-1);
+    for( j = (sizeof(unsigned long int)*8)-1; j >= 0; j-- ){
+        if( index & n->block_list[i] )
+            break;
+        else
+            index = index / 2;
+    }
+    printf("SB found in In block %lu, bit %lu\n",i,j);
+    *block = i - (n->size);
+    *bit = j ;
+}
+
+/*
+ * A little wrapper function for sb_check.
+ * WARNING: If a number is larger than ~4.2 (32 bit's) this function will
+ * return wrong results.
+ *
+ */
+unsigned long int b_msb( struct b_number* n) {
+
+    unsigned long int n_size,n_bit;// In bits
+    sb_check( n, &n_size, &n_bit);
+    return n_size * 32 + n_bit;
+}
+/*
+ * Optimized division - It's fast
+ */
+
+void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
+                struct b_number* quot, struct b_number* remainder ) {
+    unsigned long int shift, adjust;
+    unsigned long int msb_n, msb_np, msb_d, msb_d;
+    /*
+     * msb = most significant bit
+     * msb_[n,d] = constants, only calculated once
+     * msb_[n,d]p = numerator and denominator prime. These change and are recomputed.
+     */
+    struct b_number* n_pr; //numerator prime
+    struct b_number* d_pr; //denominator prime
+    msb_n = b_msb(numer);
+    msb_d = b_msb(denom);
+    
+    quote = clone( 0, numer );
+    remainder = clone( 0, denom );
+
+    n_pr = clone( 1, numer );
+    d_pr = clone( 0, denom );
+    
+    // Initial up shifting
+    shift = msb_n - msb_d - 1;
+
+    for ( i = 0; i < shift ; i++ ) {
+        b_lshift( d_pr );
+    }
+
+    // The down shifting
+    adjust = 0;
+    while( b_msb( n_pr ) <= b_msb( denom ) ) {
+        shift = shift - adjust;
+        while( b_msb( n_pr ) > b_msb( d_pr ) ) {
+            // n_pr = n_pr - d_pr
+            // quot = quot + b_exp(2, shift)
+        }
+        if( b_msb( n_pr ) <= b_msb( denom ) )
+            goto out;
+
+        adjust = b_msb( d_pr ) - b_msb( n_pr ) + 1;
+        
+        for( i = 0; i < adjust ; i++ ){
+            if( b_msb( d_pr ) <= msb_d )
+                goto out;
+            b_rshift( d_pr );
+        }
+    }
+
+
+out:
+    if( b_compare( n_pr, d_pr ) == 0 ) {
+        // quot += b_expr(shift)
+    } else {
+        // remainder = n_pr
+    }
+
 }
