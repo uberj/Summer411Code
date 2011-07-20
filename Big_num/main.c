@@ -191,6 +191,8 @@ int main( int argc, char **argv ) {
     printf("Remainder:\n");
     print_bn(bn4);
 
+    convert_bn_to_file(fp,&bn1);
+
 
     return 0;
     // Do add.

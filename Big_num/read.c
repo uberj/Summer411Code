@@ -7,6 +7,42 @@
 void print_bn( struct b_number *bn );
 
 void convert_bn_to_file( FILE *fp, struct b_number** bn ){
+    
+    struct b_number* ten; // Big number used for expn
+    struct b_number* n1;
+    struct b_number* n2;
+    struct b_number* n3;
+    struct b_number* n4;
+    char num;
+
+    /*
+     * Initialize our needed helper numbers
+     */
+    n1 = clone( 1, *bn ); // We are gonig to mutate bn
+    ten = clone( 0, *bn ); // Needed for fast_div_one
+    bzero( ten->block_list , ten->size * sizeof( unsigned long int ));
+    ten->block_list[0] = 10;
+
+    n3 = (struct b_number *)malloc(sizeof(struct b_number));
+    n3->size = 1;
+    n3->block_list = (unsigned long int*) malloc(sizeof(unsigned long int));
+    
+    n2 = clone( 1, n1 );
+
+    while( b_compare( ten, n1 ) >= 0 ){
+        bzero( n2->block_list , n2->size * sizeof( unsigned long int ));
+        bzero( n3->block_list , n3->size * sizeof( unsigned long int ));
+        b_fast_div_one( n1, ten, n2, n3 );
+        num = n3->block_list[0] + '0';
+        n4 = n1;
+        n1 = n2;
+        n2 = n4; 
+        printf("%c",num);
+       // print_bn(n1);
+        // Zero's!
+    }
+    printf("%c",(char)n1->block_list[0] + '0' );
+    printf("\n");
 
 }
 

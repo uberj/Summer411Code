@@ -200,6 +200,7 @@ void bn_copy( struct b_number* n1, struct b_number* n2 ) {
 
 /*
  * Convert a number into it's two's compliment.
+ * @Postcondition: *n will be different.
  */
 void two_comp( struct b_number** n ){
     struct b_number temp;
@@ -563,7 +564,7 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
     struct b_number b_shift; // Big number used for expn
     msb_n = b_msb(numer);
     msb_d = b_msb(denom);
-    
+
     /*
      * Intialize all utility Big nums
      */
@@ -582,8 +583,10 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
 
     temp_exp = clone( 0, numer );
     bzero( temp_exp->block_list , temp_exp->size * sizeof( unsigned long int ));
-    
+
     // Initial up shifting
+    if( msb_n == msb_d )
+        goto last_divide;
     shift = msb_n - msb_d - 1;
 
     for ( i = 0; i < shift ; i++ ) {
@@ -609,7 +612,7 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
             goto last_divide;
 
         adjust = b_msb( d_pr ) - b_msb( n_pr ) + 1;
-        
+
         for( i = 0; i < adjust ; i++ ){
             if( b_msb( d_pr ) <= msb_d )
                 goto last_divide;
@@ -620,13 +623,15 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
 
     // This would be messy edge case in that ^ loop.
 last_divide:
+    // This is a hack since two_comp changes d_pr
+    memcpy(d_pr->block_list, denom->block_list, d_pr->size);
     while( b_compare( n_pr, d_pr ) <= 0 ) { // while numer > denom
             two_comp( &d_pr );
             b_add_one( n_pr, d_pr, n_pr );
             b_inc( quot );
             two_comp( &d_pr );
     }
-    
+
 
 
 out:
@@ -638,7 +643,7 @@ out:
         b_inc(quot);
     } else {
         // remainder = n_pr
-        memcpy(remainder->block_list, n_pr->block_list, remainder->size*sizeof(unsigned long int));        
+        memcpy(remainder->block_list, n_pr->block_list, remainder->size*sizeof(unsigned long int));
     }
 
 }
