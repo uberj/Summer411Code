@@ -22,11 +22,11 @@ SRCS      = Life.c
 
 ###### MPI OPTIONS##
 CFLAGS += -DHAS_MPI
-LIBS += -lmpi
+LIBS += 
 #################### 
 
 ifndef NO_X11
-LIBS     += -lX11
+LIBS     += -lX11 
 LDFLAGS  += -L/usr/X11R6/lib
 else
 CFLAGS   += -DNO_X11
