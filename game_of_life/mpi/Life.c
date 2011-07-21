@@ -220,7 +220,7 @@ void init_grids (struct life_t * life)
 	}
 
 	// resize so each process is in charge of a vertical slice of the whole board
-        width = life->size + 2;
+        width = life->ncols + 2;
 	ubound = (((life->rank + 1) * width / life->size)); // we want 1 col of (overlap?)
 	lbound = life->rank * width / life->size;
 	width = ubound - lbound;
