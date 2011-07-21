@@ -1,20 +1,22 @@
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include "big_num.c"
+#include "read.h"
+#define BUFF_LEN 200 // For printing
 
-
-void print_bn( struct b_number *bn );
+static char num_buffer[BUFF_LEN];
 
 void convert_bn_to_file( FILE *fp, struct b_number** bn ){
-    
     struct b_number* ten; // Big number used for expn
     struct b_number* n1;
     struct b_number* n2;
     struct b_number* n3;
     struct b_number* n4;
     char num;
+    char newline = '\n';
+    int i = BUFF_LEN - 1;
 
+    /*
+     * Initialize the file
+     */
+    fseek( fp, 0L, SEEK_END );
     /*
      * Initialize our needed helper numbers
      */
@@ -26,7 +28,7 @@ void convert_bn_to_file( FILE *fp, struct b_number** bn ){
     n3 = (struct b_number *)malloc(sizeof(struct b_number));
     n3->size = 1;
     n3->block_list = (unsigned long int*) malloc(sizeof(unsigned long int));
-    
+
     n2 = clone( 1, n1 );
 
     while( b_compare( ten, n1 ) >= 0 ){
@@ -36,13 +38,17 @@ void convert_bn_to_file( FILE *fp, struct b_number** bn ){
         num = n3->block_list[0] + '0';
         n4 = n1;
         n1 = n2;
-        n2 = n4; 
+        n2 = n4;
         printf("%c",num);
-       // print_bn(n1);
-        // Zero's!
+        num_buffer[i] = num;
+        i--;
     }
-    printf("%c",(char)n1->block_list[0] + '0' );
+    num = (char)n1->block_list[0] + '0';
+    num_buffer[i] = num;
+    printf( "%c", num );
     printf("\n");
+    fwrite( &num_buffer[i], 1, BUFF_LEN-i, fp);
+    fwrite( &newline, 1 , 1 , fp );
 
 }
 

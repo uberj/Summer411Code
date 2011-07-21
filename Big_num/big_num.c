@@ -1,36 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#define B_SIZE 4;
-
-struct b_number {
-    unsigned long int size;
-    unsigned long int* block_list;
-    int id;
-};
-struct link {
-    unsigned int flags; // flags
-    /* bit    "0x1" 0         "0x2" 1        "0x4" 2
-     *      (carry_out) (init_sum finished) (totally done)
-     */
-};
-struct chain {
-    struct link* links;
-    struct b_number* n1;
-    struct b_number* n2;
-    struct b_number* sum;
-};
-
-int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* sum );
-void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum);
-void b_divide_one(  struct b_number* numer, struct b_number* denom, \
-                struct b_number* quot, struct b_number* remainder );
-void b_dec( struct b_number *n );
-int b_compare( struct b_number *n1, struct b_number *n2 );
-void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
-                struct b_number* quot, struct b_number* remainder );
-void b_fast_div(  struct b_number* numer, struct b_number* denom, \
-                struct b_number** quot, struct b_number** remainder );
-
+#include "big_num.h"
+#include "read.h"
 /*
  * Add n1 + n2 = sum
  * This part can be threaded. I'm just going to impemelent a basic carry adder.
@@ -180,7 +149,7 @@ int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* 
 
 struct b_number* clone( int copy, struct b_number* orig ){
     struct b_number* new;
-    new = (struct b_number*) calloc( 1, sizeof(struct b_number)); 
+    new = (struct b_number*) calloc( 1, sizeof(struct b_number));
     new->block_list = (unsigned long int*) malloc(sizeof(unsigned long int) * orig->size );
     new->size = orig->size;
     if( copy )
@@ -200,6 +169,7 @@ void bn_copy( struct b_number* n1, struct b_number* n2 ) {
 
 /*
  * Convert a number into it's two's compliment.
+ * TODO rewrite this using b_inc
  * @Postcondition: *n will be different.
  */
 void two_comp( struct b_number** n ){
@@ -646,4 +616,9 @@ out:
         memcpy(remainder->block_list, n_pr->block_list, remainder->size*sizeof(unsigned long int));
     }
 
+}
+
+void free_bn( struct b_number* n) {
+    free(n->block_list);
+    free(n);
 }

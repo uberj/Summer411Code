@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "read.c"
+#include "read.h"
+#include "big_num.h"
+
 
 int main( int argc, char **argv ) {
     struct b_number* bn1;
@@ -11,8 +13,37 @@ int main( int argc, char **argv ) {
     int compare;
     unsigned long int block,bit,pos;
     int i;
-    FILE *fp;
+    FILE *fp,*n1,*n2,*expect,*actual;
+
+    // run_test <flag> <bn1> <bn2> <expect> <actual>
+    n1 = fopen(argv[2], "r");
+    n2 = fopen(argv[3], "r");
+    expect = fopen(argv[4], "r");
+    actual = fopen(argv[5], "w+");
+
+    if( !( n1 && n2 && expect && actual ) ) {
+        printf("File could not be opened\n");
+        return 2;
+    }
+    /*
+     * Make numbers
+     */
+    convert_file_to_bn( n1, &bn1 );
+    close(n1);
+    convert_file_to_bn( n2, &bn2 );
+    close(n2);
+
+    switch( (char)argv[1][1] ){
+        case 'A':
+            add_test( bn1, bn2, actual );
+            break;
+        case 'M':
+            mult_test( bn1, bn2, actual );
+            break;
+    }
     // Generate our two numers.
+    /*
+    fp = fopen(fname, "r");
     strcpy(fname,"ascii_big_num1.txt");
     fp = fopen(fname, "r");
     convert_file_to_bn( fp, &bn1 );
@@ -24,8 +55,10 @@ int main( int argc, char **argv ) {
     convert_file_to_bn( fp, &bn2 );
     fclose(fp);
     print_bn(bn2);
+    */
 
     // Test's
+
     
     //Two's comp
     /*
@@ -180,6 +213,7 @@ int main( int argc, char **argv ) {
     print_bn(bn3);
     */
 
+    /*
     printf("Fast Divide test...\n");
     printf("Numerator\n");
     print_bn(bn1);
@@ -191,8 +225,9 @@ int main( int argc, char **argv ) {
     printf("Remainder:\n");
     print_bn(bn4);
 
-    convert_bn_to_file(fp,&bn1);
+    convert_bn_to_file(actual,&bn1);
 
+    */
 
     return 0;
     // Do add.
