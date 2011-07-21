@@ -241,6 +241,7 @@ void init_grids (struct life_t * life)
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
 			if (i <= ubound && i >= lbound){
+				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i-lbound, j);
 				life->grid[i-lbound][j]      = ALIVE;
 				life->next_grid[i-lbound][j] = ALIVE;
 			}
