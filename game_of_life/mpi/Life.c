@@ -257,7 +257,7 @@ void init_grids (struct life_t * life)
 		printf("[Host %d] printing initial slice.\n", life->rank);
 		for (i = 0; i < life->nrows; i++){
 			for (j = 0; j < life->ncols; j++){
-				if (grid[i][j] != DEAD)
+				if (life->grid[i][j] != DEAD)
 					printf("[#]");
 				else
 					printf("[ ]");
