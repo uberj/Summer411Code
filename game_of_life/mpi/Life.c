@@ -253,17 +253,15 @@ void init_grids (struct life_t * life)
 	}
 
 	// for debugging purposes
-	if ( life->ncols < 70 && life->nrows < 70){
-		printf("[Host %d] printing initial slice.\n", life->rank);
-		for (i = 0; i < life->nrows; i++){
-			for (j = 0; j < life->ncols; j++){
-				if (life->grid[i][j] != DEAD)
-					printf("[#]");
-				else
-					printf("[ ]");
-			}
-			printf("\n");      
+	fprintf(stderr,"[Host %d] printing initial slice.\n", life->rank);
+	for (i = 0; i < life->nrows; i++){
+		for (j = 0; j < life->ncols; j++){
+			if (life->grid[i][j] != DEAD)
+				fprintf(stderr,"[#]");
+			else
+				fprintf(stderr,"[ ]");
 		}
+		printf("\n");      
 	}
 }
 
@@ -328,17 +326,15 @@ void write_grid (struct life_t * life)
 	}
 
 	// for debugging purposes
-	if ( life->ncols < 70 && life->nrows < 70){
-		printf("[Host %d] printing finished slice.\n", life->rank);
-		for (i = 0; i < life->nrows; i++){
-			for (j = 0; j < life->ncols; j++){
-				if (grid[i][j] != DEAD)
-					printf("[#]");
-				else
-					printf("[ ]");
-			}
-			printf("\n");      
+	fprintf(stderr,"[Host %d] printing finished slice.\n", life->rank);
+	for (i = 0; i < life->nrows; i++){
+		for (j = 0; j < life->ncols; j++){
+			if (grid[i][j] != DEAD)
+				fprintf(stderr,"[#]");
+			else
+				fprintf(stderr,"[ ]");
 		}
+		printf("\n");      
 	}			
 }
 
