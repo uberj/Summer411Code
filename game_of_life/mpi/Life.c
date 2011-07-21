@@ -131,35 +131,57 @@ void copy_bounds (struct life_t * life)
 	//	Some MPIs deadlock if a single process tries 
 	//to communicate with itself
 	if (size != 1) {
-		// copy sides to neighboring processes
-		MPI_Sendrecv(grid[1], ncols+2, MPI_INT, left_rank, TOLEFT,
-			grid[nrows+1], ncols+2, MPI_INT, right_rank, TOLEFT,
-			MPI_COMM_WORLD, &status);
+        	// initialize a package for each direction
+		int *sendpackage = (int*)calloc(nrows+2, sizeof(int));
+		int *recievepackage = (int*)calloc(nrows+2, sizeof(int));
 
-		MPI_Sendrecv(grid[nrows], ncols+2, MPI_INT, right_rank,
-			TORIGHT, grid[0], ncols+2, MPI_INT, left_rank,
+		// Send to left
+		for (i = 0; i < nrows+2; i++)
+			sendpackage[i] = grid[i][1];
+
+		MPI_Sendrecv(sendpackage, nrows+2, MPI_INT, left_rank, 
+			TOLEFT, recievepackage, nrows+2, MPI_INT, right_rank, 
+			TOLEFT, MPI_COMM_WORLD, &status);
+
+		// Recieve from right
+		for (i = 0; i < nrows+2; i++)
+			grid[i][ncols+1] = recievepackage[i];
+
+		// Send to right
+		for (i = 0; i < nrows+2; i++)
+			sendpackage[i] = grid[i][ncols];
+
+		MPI_Sendrecv(sendpackage, nrows+2, MPI_INT, right_rank,
+			TORIGHT, recievepackage, nrows+2, MPI_INT, left_rank,
 			TORIGHT, MPI_COMM_WORLD, &status);
+
+		// Recieve from left
+		for (i = 0; i < nrows+2; i++)
+			grid[i][0] = recievepackage[i];
+
+		free(sendpackage);
+		free(recievepackage);
 	}
 
 	// Copy sides locally to maintain periodic boundaries
 	// when there's only one process
 	if (size == 1) {
-		for (j = 0; j < ncols+2; j++) {
-			grid[nrows+1][j] = grid[1][j];
-			grid[0][j] = grid[nrows][j];
+		for (i = 0; i < nrows+2; i++) {
+			grid[i][ncols+1] = grid[i][1];
+			grid[i][0] = grid[i][ncols];
 		}
-	}
 
-	// copy corners
-	grid[0][0]             = grid[0][ncols];
-	grid[0][ncols+1]       = grid[0][1];
-	grid[nrows+1][0]       = grid[ncols+1][nrows];
-	grid[nrows+1][ncols+1] = grid[nrows+1][1];
+		// copy corners
+		grid[0][0]             = grid[nrows][0];
+		grid[nrows+1][0]       = grid[1][0];
+		grid[0][ncols+1]       = grid[nrows][ncols+1];
+		grid[nrows+1][ncols+1] = grid[1][ncols+1];
+	}
 
 	// copy top and bottom
 	for (i = 1; i <= ncols; i++) {
-		grid[i][0]       = grid[i][nrows];
-		grid[i][nrows+1] = grid[i][1];
+		grid[0][i]       = grid[nrows][i];
+		grid[nrows+1][i] = grid[1][i];
 	}
 }
 
