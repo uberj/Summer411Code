@@ -237,10 +237,10 @@ void init_grids (struct life_t * life)
 
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
-			if (i <= ubound && i >= lbound){
+			if (i <= ubound && i > lbound){
 				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i-lbound, j);
-				life->grid[i-lbound][j]      = ALIVE;
-				life->next_grid[i-lbound][j] = ALIVE;
+				life->grid[i-lbound+1][j+1]      = ALIVE;
+				life->next_grid[i-lbound+1][j+1] = ALIVE;
 			}
 		}
 		
@@ -251,9 +251,9 @@ void init_grids (struct life_t * life)
 
 	// for debugging purposes
 	fprintf(stderr,"[Host %d] printing initial slice.\n", life->rank);
-	for (i = 0; i < life->nrows; i++){
-		for (j = 0; j < life->ncols; j++){
-			if (life->grid[i][j] != DEAD)
+	for (i = 1; i <= life->nrows; i++){
+		for (j = 1; j <= life->ncols; j++){
+			if (life->grid[i][j] == ALIVE)
 				fprintf(stderr,"[#]");
 			else
 				fprintf(stderr,"[ ]");
@@ -324,9 +324,9 @@ void write_grid (struct life_t * life)
 
 	// for debugging purposes
 	fprintf(stderr,"[Host %d] printing finished slice.\n", life->rank);
-	for (i = 0; i < life->nrows; i++){
-		for (j = 0; j < life->ncols; j++){
-			if (grid[i][j] != DEAD)
+	for (i = 1; i <= life->nrows; i++){
+		for (j = 1; j <= life->ncols; j++){
+			if (grid[i][j] == ALIVE)
 				fprintf(stderr,"[#]");
 			else
 				fprintf(stderr,"[ ]");
