@@ -251,6 +251,20 @@ void init_grids (struct life_t * life)
 	} else {
 		randomize_grid(life, INIT_PROB);
 	}
+
+	// for debugging purposes
+	if ( life->ncols < 70 && life->nrows < 70){
+		printf("[Host %d] printing initial slice.\n", life->rank);
+		for (i = 0; i < life->nrows; i++){
+			for (j = 0; j < life->ncols; j++){
+				if (grid[i][j] != DEAD)
+					printf("[#]");
+				else
+					printf("[ ]");
+			}
+			printf("\n");      
+		}
+	}
 }
 
 /* 
@@ -311,6 +325,20 @@ void write_grid (struct life_t * life)
 		}
 		buffer[0] = '\0';
 		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD); //let the master know this process is finished
+	}
+
+	// for debugging purposes
+	if ( life->ncols < 70 && life->nrows < 70){
+		printf("[Host %d] printing finished slice.\n", life->rank);
+		for (i = 0; i < life->nrows; i++){
+			for (j = 0; j < life->ncols; j++){
+				if (grid[i][j] != DEAD)
+					printf("[#]");
+				else
+					printf("[ ]");
+			}
+			printf("\n");      
+		}
 	}			
 }
 
