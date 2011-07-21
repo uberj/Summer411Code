@@ -205,6 +205,7 @@ void init_grids (struct life_t * life)
 {
 	FILE * fd;
 	int i,j,temp;
+	int ubound, lbound;
 
 	if (life->infile != NULL) {
 		if ((fd = fopen(life->infile, "r")) == NULL) {
@@ -222,7 +223,11 @@ void init_grids (struct life_t * life)
         temp = life->ncols;
 	life->ncols = life->ncols / life->size;
 	if(life->rank < (temp % life->size)) // pass out the remaining cols
-		life->ncols++;	
+		life->ncols++;
+
+	ubound = ((life->rank + 1 * temp / life->size) - 1);
+	lbound = life->rank * temp / life->size;
+	fprintf(stderr, "[Process %d] lower bound is %d upper bound is %d.\n",life->rank,lbound,ubound);
 
 	allocate_grids(life);
 
@@ -235,8 +240,10 @@ void init_grids (struct life_t * life)
 
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
-			life->grid[i][j]      = ALIVE;
-			life->next_grid[i][j] = ALIVE;
+			if (i <= ubound && i >= lbound){
+				life->grid[i-lbound][j]      = ALIVE;
+				life->next_grid[i-lbound][j] = ALIVE;
+			}
 		}
 		
 		fclose(fd);
@@ -292,7 +299,7 @@ void write_grid (struct life_t * life)
 			}
 		}
 		fclose(fd);
-	} else {
+	} else if (life->rank && life->outfile){
 		for (i = 1; i <= ncols; i++) {
 			for (j = 1; j <= nrows; j++) {
 				if (grid[i][j] != DEAD){
@@ -351,8 +358,9 @@ void randomize_grid (struct life_t * life, double prob)
 /*
  * Seed the random number generator based on the
  * process's rank and time. Multiplier is arbitrary.
+ * TODO allow the user to specify determinism.
  */
-void seed_random (int rank) { srandom(time(NULL) + 100*rank); }
+void seed_random (int rank) { srandom(0); }
 
 /*
  * Prepare process for a clean termination.
