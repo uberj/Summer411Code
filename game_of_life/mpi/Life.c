@@ -343,6 +343,7 @@ void free_grids (struct life_t * life)
 {
 	int i;
 	int ncols = life->ncols;
+	int nrows = life->nrows;
 
 	for (i = 0; i < nrows+2; i++) {
 		free(life->grid[i]);
