@@ -222,7 +222,7 @@ void init_grids (struct life_t * life)
 	// resize so each process is in charge of a vertical slice of the whole board
 	ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
 	lbound = life->rank * life->ncols / life->size;
-	life->ncols = ubound - lbound;
+	life->ncols = (ubound - lbound) + 1;
 
 	fprintf(stderr, "[Process %d] lower bound is %d upper bound is %d width is %d.\n", life->rank, lbound, ubound, life->ncols);
 
