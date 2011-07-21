@@ -225,7 +225,7 @@ void init_grids (struct life_t * life)
 	if(life->rank < (temp % life->size)) // pass out the remaining cols
 		life->ncols++;
 
-	ubound = ((life->rank + 1 * temp / life->size) - 1);
+	ubound = (((life->rank + 1) * temp / life->size) - 1);
 	lbound = life->rank * temp / life->size;
 	fprintf(stderr, "[Process %d] lower bound is %d upper bound is %d.\n",life->rank,lbound,ubound);
 
