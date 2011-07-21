@@ -16,7 +16,7 @@ void convert_bn_to_file( FILE *fp, struct b_number** bn ){
     /*
      * Initialize the file
      */
-    fseek( fp, 0L, SEEK_END );
+    fseek( fp, 0L, SEEK_SET );
     /*
      * Initialize our needed helper numbers
      */
@@ -39,14 +39,11 @@ void convert_bn_to_file( FILE *fp, struct b_number** bn ){
         n4 = n1;
         n1 = n2;
         n2 = n4;
-        printf("%c",num);
         num_buffer[i] = num;
         i--;
     }
     num = (char)n1->block_list[0] + '0';
     num_buffer[i] = num;
-    printf( "%c", num );
-    printf("\n");
     fwrite( &num_buffer[i], 1, BUFF_LEN-i, fp);
     fwrite( &newline, 1 , 1 , fp );
 
@@ -80,7 +77,7 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
     result = ( (long double)log(max)/(long double)log(2) ) + 1;
     size = result / (sizeof(unsigned long int)*8);
     n1->size = size+1;
-    printf("Optimal size: %lu\n",n1->size);
+    //printf("Optimal size: %lu\n",n1->size);
     n1->block_list = (unsigned long int*) calloc(n1->size,sizeof(unsigned long int));
 
     // Make copies

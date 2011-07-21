@@ -6,20 +6,12 @@
 int main( int argc, char **argv ) {
     struct b_number* bn1;
     struct b_number* bn2;
-    struct b_number* bn3;
-    struct b_number* bn4;
-    struct b_number* sum;
-    char fname[30];
-    int compare;
-    unsigned long int block,bit,pos;
-    int i;
-    FILE *fp,*n1,*n2,*expect,*actual;
+    FILE *fp,*n1,*n2,*expect,*actual,*remain,*quot;
 
-    // run_test <flag> <bn1> <bn2> <expect> <actual>
+    // run_test <flag> <bn1> <bn2> <expect> <actual> <remain> (remain only with division)
     n1 = fopen(argv[2], "r");
     n2 = fopen(argv[3], "r");
     expect = fopen(argv[4], "r");
-    actual = fopen(argv[5], "w+");
 
     if( !( n1 && n2 && expect && actual ) ) {
         printf("File could not be opened\n");
@@ -35,10 +27,21 @@ int main( int argc, char **argv ) {
 
     switch( (char)argv[1][1] ){
         case 'A':
+            actual = fopen(argv[5], "w+"); // expected remainder in Division test
             add_test( bn1, bn2, actual );
+            close(actual);
             break;
         case 'M':
+            actual = fopen(argv[5], "w+"); // expected remainder in Division test
             mult_test( bn1, bn2, actual );
+            close(actual);
+            break;
+        case 'D':
+            quot = fopen(argv[6], "w+");
+            remain = fopen(argv[7], "w+");
+            div_test( bn1, bn2, quot, remain );
+            close(remain);
+            close(quot);
             break;
     }
     // Generate our two numers.

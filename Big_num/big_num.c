@@ -173,20 +173,24 @@ void bn_copy( struct b_number* n1, struct b_number* n2 ) {
  * @Postcondition: *n will be different.
  */
 void two_comp( struct b_number** n ){
-    struct b_number temp;
-    struct b_number *new;
+    //struct b_number temp;
+    //struct b_number *new;
     unsigned long int i;
-    temp.size = 1;
-    temp.block_list = malloc(sizeof(unsigned long int));
-    temp.block_list[0] = 1L;
+    //temp.size = 1;
+    //temp.block_list = malloc(sizeof(unsigned long int));
+    //temp.block_list[0] = 1L;
     // Thread this shit!
     for( i=0; i< (*n)->size; i++ ){
         (*n)->block_list[i] = ~( (*n)->block_list[i] ); // Not all the values
     }
-    new = b_add( *n, &temp );
+    //new = b_add( *n, &temp );
+    b_inc(*n);
+    return;
+    /*
     free((*n)->block_list);
     free(*n);
     *n = new;
+    */
 }
 
 /*
@@ -195,7 +199,22 @@ void two_comp( struct b_number** n ){
  * TODO Optimize: Since we are doing a cheap repetative adds, you should
  * only decrement the smaller of the two (n1 or mult).
  *
+void b_mult( struct b_number *mult, struct b_number *n1 ){
+    struct b_number* large_num;
+    struct b_number* small_num;
+    struct b_number* temp;
+    if( b_msb(mult) < b_msb(n1) ){
+        small_num = mult;
+        large_num = n1;
+    } else {
+        small_num = n1;
+        large_num = mult;
+    }
+    temp = clone( 1, small_num);
+    b_mult_one( temp, large_num );
+}
  */
+
 void b_mult( struct b_number *mult, struct b_number *n1 ){
     //int i;
     struct b_number *b1;
