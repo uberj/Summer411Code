@@ -9,6 +9,7 @@ int main( int argc, char **argv ) {
     struct b_number* sum;
     char fname[30];
     int compare;
+    unsigned long int block,bit,pos;
     int i;
     FILE *fp;
     // Generate our two numers.
@@ -51,6 +52,15 @@ int main( int argc, char **argv ) {
     sum = b_add( bn2, bn1 );
     printf("Sum is:\n");
     print_bn(sum);
+    
+    printf("Adding test 2 ...\n");
+    printf("bn1 is:\n");
+    print_bn(bn1);
+    printf("bn2 is:\n");
+    print_bn(bn2);
+    b_add_one( bn2, bn1, bn2 );
+    printf("Sum is:\n");
+    print_bn(bn2);
     */
 
     /*
@@ -80,6 +90,21 @@ int main( int argc, char **argv ) {
     }
     print_bn(bn1);
     */
+    /*
+    // Inc test
+    printf("Dec Test...\n");
+    printf("Number is:\n");
+    print_bn(bn1);
+    printf("Subtracting one...\n");
+    b_dec(bn1);
+    printf("Sum:\n");
+    print_bn(bn1);
+    printf("Doing 100 dec...\n");
+    for(i=0;i<100;i++){
+        b_dec(bn1);
+    }
+    print_bn(bn1);
+    */
     
     /*
     printf("Compare test...\n");
@@ -96,6 +121,7 @@ int main( int argc, char **argv ) {
         printf("Number 1 and 2 are equal\n");
     */
 
+    /*
     printf("Divide test...\n");
     printf("Number 1\n");
     print_bn(bn1);
@@ -106,6 +132,67 @@ int main( int argc, char **argv ) {
     print_bn(bn3);
     printf("Remainder:\n");
     print_bn(bn4);
+    */
+
+    /*
+    printf("sb_check test...\n");
+    printf("Number 1\n");
+    print_bn(bn1);
+    sb_check(bn1,&block,&bit);
+    printf("Number 2\n");
+    print_bn(bn2);
+    sb_check(bn2,&block,&bit);
+    pos = b_msb(bn1);
+    printf("bn1 MSB found at %lu\n",pos);
+    pos = b_msb(bn2);
+    printf("bn2 MSB found at %lu\n",pos);
+    */
+
+    /*
+    printf("lshift test...\n");
+    print_bn(bn1);
+    printf("Shifting 10 times\n");
+    for(i=0; i<33;i++){
+        b_lshift(bn1);
+        print_bn(bn1);
+    }
+    */
+    
+    /*
+    printf("rshift test...\n");
+    print_bn(bn1);
+    printf("Shifting 10 times\n");
+    for(i=0; i<100;i++){
+        b_rshift(bn1);
+        print_bn(bn1);
+    }
+    */
+
+    /*
+    //EXP test
+    printf("Exp test...\n");
+    printf("base is:\n");
+    print_bn(bn1);
+    printf("exp is:\n");
+    print_bn(bn2);
+    _b_expn_test( bn1, bn2, &bn3 );
+    printf("Result is:\n");
+    print_bn(bn3);
+    */
+
+    printf("Fast Divide test...\n");
+    printf("Numerator\n");
+    print_bn(bn1);
+    printf("Denominator\n");
+    print_bn(bn2);
+    b_fast_div( bn1, bn2, &bn3, &bn4 );
+    printf("Quotent:\n");
+    print_bn(bn3);
+    printf("Remainder:\n");
+    print_bn(bn4);
+
+    convert_bn_to_file(fp,&bn1);
+
 
     return 0;
     // Do add.
