@@ -51,6 +51,8 @@ int init (struct life_t * life, int * c, char *** v)
 	life->ncols       = DEFAULT_SIZE;
 	life->nrows       = DEFAULT_SIZE;
 	life->generations = DEFAULT_GENS;
+	life->randseed    = 0;
+	life->print	  = false;
 	life->infile      = NULL;
 	life->outfile     = NULL;
 
@@ -58,7 +60,7 @@ int init (struct life_t * life, int * c, char *** v)
 	MPI_Comm_rank(MPI_COMM_WORLD, &life->rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &life->size);
 
-	seed_random(life->rank);
+	seed_random(life->randseed);
 
 	parse_args(life, argc, argv);
 
@@ -272,16 +274,8 @@ void init_grids (struct life_t * life)
 	}
 
 	// for debugging purposes
-	fprintf(stderr,"[Host %d] printing initial slice.\n", life->rank);
-	for (i = 1; i <= life->nrows; i++){
-		for (j = 1; j <= life->ncols; j++){
-			if (life->grid[i][j] == ALIVE)
-				fprintf(stderr,"[#]");
-			else
-				fprintf(stderr,"[ ]");
-		}
-		fprintf(stderr,"\n");      
-	}
+	printf("[Host %d] printing initial slice.\n", life->rank);
+	print_grid (life);
 }
 
 /* 
@@ -345,16 +339,8 @@ void write_grid (struct life_t * life)
 	}
 
 	// for debugging purposes
-	fprintf(stderr,"[Host %d] printing finished slice.\n", life->rank);
-	for (i = 1; i <= life->nrows; i++){
-		for (j = 1; j <= life->ncols; j++){
-			if (grid[i][j] == ALIVE)
-				fprintf(stderr,"[#]");
-			else
-				fprintf(stderr,"[ ]");
-		}
-		fprintf(stderr,"\n");      
-	}			
+	printf("[Host %d] printing finished slice.\n", life->rank);
+	print_grid (life);			
 }
 
 /*
@@ -391,7 +377,6 @@ void randomize_grid (struct life_t * life, double prob)
 	int ncols = life->ncols;
 	int nrows = life->nrows;
 
-	fprintf(stderr, "This process is randomizing its grid using ncols = %d and nrows = %d.\n", ncols, nrows);
 	for (i = 1; i <= nrows; i++) {
 		for (j = 1; j <= ncols; j++) {
 			if (rand_double() < prob)
@@ -400,12 +385,24 @@ void randomize_grid (struct life_t * life, double prob)
 	}
 }
 
+void print_grid (struct life_t *life)
+{
+	for (i = 1; i <= life->nrows; i++){
+		for (j = 1; j <= life->ncols; j++){
+			if (life->grid[i][j] == ALIVE)
+				printf("[#]");
+			else
+				printf("[ ]");
+		}
+		printf("\n");      
+	}
+}
+
 /*
- * Seed the random number generator based on the
- * process's rank and time. Multiplier is arbitrary.
- * TODO allow the user to specify determinism.
+ * Seed the random number generator possibly based on the
+ * users input.
  */
-void seed_random (int rank) { srandom(0); }
+void seed_random (int seed) { srandom(seed); }
 
 /*
  * Prepare process for a clean termination.
@@ -421,18 +418,25 @@ void cleanup (struct life_t * life)
 /* 
  * Describes Life's command line option
  */
-void usage () 
+void usage (int rank) 
 {
+	if (rank != 0){
+        	MPI_Finalize();
+		exit(EXIT_SUCCESS);
+	}
 	printf("\nUsage: Life [options]\n");
 	printf("  -c|--columns number   Number of columns in grid. Default: %d\n", DEFAULT_SIZE);
 	printf("  -r|--rows number      Number of rows in grid. Default: %d\n", DEFAULT_SIZE);
 	printf("  -g|--gens number      Number of generations to run. Default: %d\n", DEFAULT_GENS);
+	printf("  -s|--seed number	Set the seed for the randomize function. Default: %d\n", DEFAULT_SEED);
+	printf("  -p|--print		Print before and after slices of the game board. Default: off.\n");
 	printf("  -i|--input filename   Input file. See README for format. Default: none.\n");
 	printf("  -o|--output filename  Output file. Default: none.\n");
 	printf("  -h|--help             This help page.\n");
 	printf("\nSee README for more information.\n\n");
 
-	exit(EXIT_FAILURE);
+	MPI_Finalize();
+	exit(EXIT_SUCCESS);
 }
 
 /*
@@ -459,6 +463,12 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 			case 'g':
 				life->generations = strtol(optarg, (char**) NULL, 10);
 				break;
+			case 's':
+				life->randseed = strtol(optarg, (char**) NULL, 10);
+				break;
+			case 'p':
+				life->print = true;
+				break;
 			case 'i':
 				life->infile = optarg;
 				break;
@@ -467,7 +477,7 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 				break;
 			case 'h':
 			case '?':
-				usage();
+				usage(life->rank);
 				break;
 
 			default:
@@ -485,3 +495,4 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 			life->generations = strtol(argv[3], (char**) NULL, 10);
 	}
 }
+

@@ -36,5 +36,6 @@ void       seed_random (int rank);
 void           cleanup (struct life_t * life);
 void        parse_args (struct life_t * life, int argc, char ** argv);
 void             usage ();
+void        print_grid (struct life_t * life);
 
 #endif

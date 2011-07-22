@@ -15,11 +15,13 @@ Updated 2010, Tiago Sommer Damasceno and
 #include <stdbool.h>
 #include <getopt.h>
 
-static const char * opts = "c:r:g:i:o:t::xh?";
+static const char * opts = "c:r:g:s:p:i:o:t::xh?";
 static const struct option long_opts[] = {
 	{ "columns", required_argument, NULL, 'c' },
 	{ "rows", required_argument, NULL, 'r' },
 	{ "gens", required_argument, NULL, 'g' },
+	{ "seed", required_argument, NULL, 's' },
+	{ "print", no_argument, NULL, 'p' },
 	{ "output", required_argument, NULL, 'o' },
 	{ "input", required_argument, NULL, 'i' },
 	{ "throttle", optional_argument, NULL, 't' },
@@ -31,6 +33,7 @@ static const struct option long_opts[] = {
 const int DEFAULT_THROTTLE = 60;
 const int     DEFAULT_SIZE = 105;
 const int     DEFAULT_GENS = 1000;
+const int     DEFAULT_SEED = 0;
 const double     INIT_PROB = 0.25;
 
 // All the data needed by an instance of Life
@@ -44,6 +47,8 @@ struct life_t {
 	int  generations;
 	char * infile;
 	char * outfile;
+	bool print;
+	int  randseed;
 };
 
 enum CELL_STATES {
