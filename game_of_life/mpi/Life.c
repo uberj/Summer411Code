@@ -51,7 +51,7 @@ int init (struct life_t * life, int * c, char *** v)
 	life->ncols       = DEFAULT_SIZE;
 	life->nrows       = DEFAULT_SIZE;
 	life->generations = DEFAULT_GENS;
-	life->randseed    = 0;
+	life->randseed    = DEFAULT_SEED;
 	life->print	  = false;
 	life->infile      = NULL;
 	life->outfile     = NULL;
@@ -467,6 +467,7 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 				life->generations = strtol(optarg, (char**) NULL, 10);
 				break;
 			case 's':
+				printf("s flag was passed.\n");
 				life->randseed = strtol(optarg, (char**) NULL, 10);
 				break;
 			case 'p':
@@ -477,7 +478,7 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 				break;
 			case 'o':
 				life->outfile = optarg;
-				break;
+		        	break;
 			case 'h':
 			case '?':
 				usage(life->rank);
