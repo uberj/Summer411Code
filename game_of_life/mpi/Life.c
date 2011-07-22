@@ -303,7 +303,7 @@ void write_grid (struct life_t * life)
 
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
-				if (grid[i][j] != DEAD)
+				if (grid[i][j] == ALIVE)
 					fprintf(fd, "%d %d\n", i-1, j-1);
 			}
 		}
@@ -312,6 +312,7 @@ void write_grid (struct life_t * life)
 
 	// collect datapoints from each node and add them to the file
 	if (!life->rank && life->outfile){
+		//printf("Collecting data from other nodes.\n");
 		if ((fd = fopen(life->outfile, "a")) == NULL) {
 			perror("Failed to open file for output");
 			exit(EXIT_FAILURE);
@@ -327,7 +328,7 @@ void write_grid (struct life_t * life)
 	} else if (life->rank && life->outfile){
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
-				if (grid[i][j] != DEAD){
+				if (grid[i][j] == ALIVE){
                                         sprintf(buffer,"%d %d", i-1, j-1); 
 					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
 				}
