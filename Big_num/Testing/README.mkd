@@ -30,3 +30,8 @@ output is saved to the output file, the bash script should 'diff' the expected
 and actual results and fail the test if need be.
 
     ./run_test -[AMSEDIPT] <big num1> <big num2> <expected> <actual>
+
+AUTOMATION
+==========
+Use the ./make_test.sh script to write a test.
+Run ./runtest.sh to run the test suit.
