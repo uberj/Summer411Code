@@ -60,8 +60,6 @@ int init (struct life_t * life, int * c, char *** v)
 	MPI_Comm_rank(MPI_COMM_WORLD, &life->rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &life->size);
 
-	//seed_random(life->randseed);
-
 	parse_args(life, argc, argv);
         seed_random(life->randseed);
 	init_grids(life);
@@ -130,8 +128,8 @@ void copy_bounds (struct life_t * life)
 		TORIGHT
 	};
 
-	//	Some MPIs deadlock if a single process tries 
-	//to communicate with itself
+	// Some MPIs deadlock if a single process tries 
+	// to communicate with itself
 	if (size != 1) {
         	// initialize a package for each direction
 		int *sendpackage = (int*)calloc(nrows+2, sizeof(int));
@@ -312,7 +310,7 @@ void write_grid (struct life_t * life)
 		fclose(fd);
 	}
 
-	// collect datapoints from each node and write them to file
+	// collect datapoints from each node and add them to the file
 	if (!life->rank && life->outfile){
 		if ((fd = fopen(life->outfile, "a")) == NULL) {
 			perror("Failed to open file for output");
@@ -406,7 +404,7 @@ void print_grid (struct life_t *life)
  * users input.
  */
 void seed_random (int seed) { srandom(seed); }
-
+                                 
 /*
  * Prepare process for a clean termination.
  */
@@ -467,7 +465,6 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 				life->generations = strtol(optarg, (char**) NULL, 10);
 				break;
 			case 's':
-				printf("s flag was passed.\n");
 				life->randseed = strtol(optarg, (char**) NULL, 10);
 				break;
 			case 'p':
