@@ -304,7 +304,7 @@ void write_grid (struct life_t * life)
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] != DEAD)
-					fprintf(fd, "%d %d\n", i, j);
+					fprintf(fd, "%d %d\n", i-1, j-1);
 			}
 		}
 		fclose(fd);
@@ -328,7 +328,7 @@ void write_grid (struct life_t * life)
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] != DEAD){
-                                        sprintf(buffer,"%d %d", i, j); 
+                                        sprintf(buffer,"%d %d", i-1, j-1); 
 					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
 				}
 			}
