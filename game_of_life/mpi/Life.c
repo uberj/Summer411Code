@@ -273,9 +273,10 @@ void init_grids (struct life_t * life)
 		randomize_grid(life, INIT_PROB);
 	}
 
-	// for debugging purposes
-	printf("[Host %d] printing initial slice.\n", life->rank);
-	print_grid (life);
+	if (life->print){
+		printf("[Host %d] printing initial slice.\n", life->rank);
+		print_grid (life);
+	}
 }
 
 /* 
@@ -338,9 +339,10 @@ void write_grid (struct life_t * life)
 		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD); //let the master know this process is finished
 	}
 
-	// for debugging purposes
-	printf("[Host %d] printing finished slice.\n", life->rank);
-	print_grid (life);			
+	if (life->print){
+		printf("[Host %d] printing finished slice.\n", life->rank);
+		print_grid (life);
+	}
 }
 
 /*
