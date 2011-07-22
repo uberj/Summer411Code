@@ -1,6 +1,6 @@
 Big Number
 ===========
-*"...so pretty much just a really big calculator?"* - Kevin Strassek
+*"...so pretty much just a really big calculator?"* - Kevin Strasser
 
 Goal
 -------
