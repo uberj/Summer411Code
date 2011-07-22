@@ -1,0 +1,20 @@
+Big Number
+===========
+*"...so pretty much just a really big calculator?"* - Kevin Strasser
+
+Goal
+-------
+To take existing (semi-working) code and make it really fast by threading it.
+
+About
+------
+In big_num.c there are meathod definitions that together can be used to manipulate
+numbers that are so large that they could not fit into the largest known CPU registers.
+Implementing basic functions like ADD and DIVIDE become experemly processor intensive
+and require a lot of memory. To make certain parts of the code threaded would speed
+up preformance greatly, esspecially on a multi core system. Go through big_num.c
+and identify where threading would be possible. Keep your original untouched code
+around so that after you have threaded a few critical functions in big_num.c you can
+compare timed execution times.
+
+

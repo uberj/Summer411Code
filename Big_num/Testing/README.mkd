@@ -1,0 +1,45 @@
+TESTS
+=====
+*Test's for big number operations*
+
+Structure
+---------
+All tests will be run in the Testing/ sub directory. Numbers being used in the
+test's will be stored in Testing/numbers. Numbers will be stored in triplets.
+The two numbers being operated on (or one number) will be stored in files with
+the format:
+    ascii_big_num[1-90-9][a-z][AMSEDIDT][1-90-9].txt
+
+The first letter number represents what test number the file belongs to. The
+letter after that is a unique id within that test. 'AMSEDIPT' represents the
+following operations
+
+    A - Addition
+    M - Multiplication
+    S - Expenentiation
+    D - Division
+    I - Incriment
+    P - Decrement
+    T - Two's Compliment
+
+Test Structure
+--------------
+A test will run with three parameters made up of at most four files. Two files will be the big numbers themselves. The third file will be the expected output
+and the fourth file will be the actual output. After the program executes and
+output is saved to the output file, the bash script should 'diff' the expected
+and actual results and fail the test if need be.
+
+    ./run_test -[AMSEDIPT] <big num1> <big num2> <expected> <actual>
+
+AUTOMATION
+==========
+Use the...
+
+    ./make_test.sh
+
+script to write a test.
+Run...
+
+    ./runtest.sh
+
+...to run the test suit.
