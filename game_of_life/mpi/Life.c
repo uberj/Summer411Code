@@ -60,10 +60,10 @@ int init (struct life_t * life, int * c, char *** v)
 	MPI_Comm_rank(MPI_COMM_WORLD, &life->rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &life->size);
 
-	seed_random(life->randseed);
+	//seed_random(life->randseed);
 
 	parse_args(life, argc, argv);
-
+        seed_random(life->randseed);
 	init_grids(life);
 
 }
