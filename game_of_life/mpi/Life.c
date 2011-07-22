@@ -80,8 +80,8 @@ void eval_rules (struct life_t * life)
 	int ** grid      = life->grid;
 	int ** next_grid = life->next_grid;
 
-	for (i = 1; i <= ncols; i++) {
-		for (j = 1; j <= nrows; j++) {
+	for (i = 1; i <= nrows; i++) {
+		for (j = 1; j <= ncols; j++) {
 			neighbors = 0;
 
 			// count neighbors
@@ -131,35 +131,57 @@ void copy_bounds (struct life_t * life)
 	//	Some MPIs deadlock if a single process tries 
 	//to communicate with itself
 	if (size != 1) {
-		// copy sides to neighboring processes
-		MPI_Sendrecv(grid[1], nrows+2, MPI_INT, left_rank, TOLEFT,
-			grid[ncols+1], nrows+2, MPI_INT, right_rank, TOLEFT,
-			MPI_COMM_WORLD, &status);
+        	// initialize a package for each direction
+		int *sendpackage = (int*)calloc(nrows+2, sizeof(int));
+		int *recievepackage = (int*)calloc(nrows+2, sizeof(int));
 
-		MPI_Sendrecv(grid[ncols], nrows+2, MPI_INT, right_rank,
-			TORIGHT, grid[0], nrows+2, MPI_INT, left_rank,
+		// Send to left
+		for (i = 0; i < nrows+2; i++)
+			sendpackage[i] = grid[i][1];
+
+		MPI_Sendrecv(sendpackage, nrows+2, MPI_INT, left_rank, 
+			TOLEFT, recievepackage, nrows+2, MPI_INT, right_rank, 
+			TOLEFT, MPI_COMM_WORLD, &status);
+
+		// Recieve from right
+		for (i = 0; i < nrows+2; i++)
+			grid[i][ncols+1] = recievepackage[i];
+
+		// Send to right
+		for (i = 0; i < nrows+2; i++)
+			sendpackage[i] = grid[i][ncols];
+
+		MPI_Sendrecv(sendpackage, nrows+2, MPI_INT, right_rank,
+			TORIGHT, recievepackage, nrows+2, MPI_INT, left_rank,
 			TORIGHT, MPI_COMM_WORLD, &status);
+
+		// Recieve from left
+		for (i = 0; i < nrows+2; i++)
+			grid[i][0] = recievepackage[i];
+
+		free(sendpackage);
+		free(recievepackage);
 	}
 
 	// Copy sides locally to maintain periodic boundaries
 	// when there's only one process
 	if (size == 1) {
-		for (j = 0; j < nrows+2; j++) {
-			grid[ncols+1][j] = grid[1][j];
-			grid[0][j] = grid[ncols][j];
+		for (i = 0; i < nrows+2; i++) {
+			grid[i][ncols+1] = grid[i][1];
+			grid[i][0] = grid[i][ncols];
 		}
-	}
 
-	// copy corners
-	grid[0][0]             = grid[0][nrows];
-	grid[0][nrows+1]       = grid[0][1];
-	grid[ncols+1][0]       = grid[ncols+1][nrows];
-	grid[ncols+1][nrows+1] = grid[ncols+1][1];
+		// copy corners
+		grid[0][0]             = grid[nrows][0];
+		grid[nrows+1][0]       = grid[1][0];
+		grid[0][ncols+1]       = grid[nrows][ncols+1];
+		grid[nrows+1][ncols+1] = grid[1][ncols+1];
+	}
 
 	// copy top and bottom
 	for (i = 1; i <= ncols; i++) {
-		grid[i][0]       = grid[i][nrows];
-		grid[i][nrows+1] = grid[i][1];
+		grid[0][i]       = grid[nrows][i];
+		grid[nrows+1][i] = grid[1][i];
 	}
 }
 
@@ -174,8 +196,8 @@ void update_grid (struct life_t * life)
 	int ** grid      = life->grid;
 	int ** next_grid = life->next_grid;
 
-	for (i = 0; i < ncols+2; i++)
-		for (j = 0; j < nrows+2; j++)
+	for (i = 0; i < nrows+2; i++)
+		for (j = 0; j < ncols+2; j++)
 			grid[i][j] = next_grid[i][j];
 }
 
@@ -188,12 +210,12 @@ void allocate_grids (struct life_t * life)
 	int ncols = life->ncols;
 	int nrows = life->nrows;
 
-	life->grid      = (int **) malloc(sizeof(int *) * (ncols+2));
-	life->next_grid = (int **) malloc(sizeof(int *) * (ncols+2));
+	life->grid      = (int **) malloc(sizeof(int *) * (nrows+2));
+	life->next_grid = (int **) malloc(sizeof(int *) * (nrows+2));
 
-	for (i = 0; i < ncols+2; i++) {
-		life->grid[i]      = (int *) malloc(sizeof(int) * (nrows+2));
-		life->next_grid[i] = (int *) malloc(sizeof(int) * (nrows+2));
+	for (i = 0; i < nrows+2; i++) {
+		life->grid[i]      = (int *) malloc(sizeof(int) * (ncols+2));
+		life->next_grid[i] = (int *) malloc(sizeof(int) * (ncols+2));
 	}
 }
 
@@ -204,7 +226,8 @@ void allocate_grids (struct life_t * life)
 void init_grids (struct life_t * life) 
 {
 	FILE * fd;
-	int i,j,temp;
+	int i,j;
+	int ubound, lbound;
 
 	if (life->infile != NULL) {
 		if ((fd = fopen(life->infile, "r")) == NULL) {
@@ -219,15 +242,16 @@ void init_grids (struct life_t * life)
 	}
 
 	// resize so each process is in charge of a vertical slice of the whole board
-        temp = life->ncols;
-	life->ncols = life->ncols / life->size;
-	if(life->rank < (temp % life->size)) // pass out the remaining cols
-		life->ncols++;	
+	ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
+	lbound = life->rank * life->ncols / life->size;
+	life->ncols = (ubound - lbound) + 1;
+
+	fprintf(stderr, "[Process %d] lower bound is %d upper bound is %d width is %d.\n", life->rank, lbound, ubound, life->ncols);
 
 	allocate_grids(life);
 
-	for (i = 0; i < life->ncols+2; i++) {
-		for (j = 0; j < life->nrows+2; j++) {
+	for (i = 0; i < life->nrows+2; i++) {
+		for (j = 0; j < life->ncols+2; j++) {
 			life->grid[i][j]      = DEAD;
 			life->next_grid[i][j] = DEAD;
 		}
@@ -235,13 +259,28 @@ void init_grids (struct life_t * life)
 
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
-			life->grid[i][j]      = ALIVE;
-			life->next_grid[i][j] = ALIVE;
+			if (j <= ubound && j >= lbound){
+				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i, j-lbound);
+				life->grid[i+1][j-lbound+1]      = ALIVE;
+				life->next_grid[i+1][j-lbound+1] = ALIVE;
+			}
 		}
 		
 		fclose(fd);
 	} else {
 		randomize_grid(life, INIT_PROB);
+	}
+
+	// for debugging purposes
+	fprintf(stderr,"[Host %d] printing initial slice.\n", life->rank);
+	for (i = 1; i <= life->nrows; i++){
+		for (j = 1; j <= life->ncols; j++){
+			if (life->grid[i][j] == ALIVE)
+				fprintf(stderr,"[#]");
+			else
+				fprintf(stderr,"[ ]");
+		}
+		fprintf(stderr,"\n");      
 	}
 }
 
@@ -269,8 +308,8 @@ void write_grid (struct life_t * life)
 
 		//fprintf(fd, "%d %d\n", ncols, nrows);
 
-		for (i = 1; i <= ncols; i++) {
-			for (j = 1; j <= nrows; j++) {
+		for (i = 1; i <= nrows; i++) {
+			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] != DEAD)
 					fprintf(fd, "%d %d\n", i, j);
 			}
@@ -292,9 +331,9 @@ void write_grid (struct life_t * life)
 			}
 		}
 		fclose(fd);
-	} else {
-		for (i = 1; i <= ncols; i++) {
-			for (j = 1; j <= nrows; j++) {
+	} else if (life->rank && life->outfile){
+		for (i = 1; i <= nrows; i++) {
+			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] != DEAD){
                                         sprintf(buffer,"%d %d", i, j); 
 					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
@@ -303,6 +342,18 @@ void write_grid (struct life_t * life)
 		}
 		buffer[0] = '\0';
 		MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD); //let the master know this process is finished
+	}
+
+	// for debugging purposes
+	fprintf(stderr,"[Host %d] printing finished slice.\n", life->rank);
+	for (i = 1; i <= life->nrows; i++){
+		for (j = 1; j <= life->ncols; j++){
+			if (grid[i][j] == ALIVE)
+				fprintf(stderr,"[#]");
+			else
+				fprintf(stderr,"[ ]");
+		}
+		fprintf(stderr,"\n");      
 	}			
 }
 
@@ -314,8 +365,9 @@ void free_grids (struct life_t * life)
 {
 	int i;
 	int ncols = life->ncols;
+	int nrows = life->nrows;
 
-	for (i = 0; i < ncols+2; i++) {
+	for (i = 0; i < nrows+2; i++) {
 		free(life->grid[i]);
 		free(life->next_grid[i]);
 	}
@@ -340,8 +392,8 @@ void randomize_grid (struct life_t * life, double prob)
 	int nrows = life->nrows;
 
 	fprintf(stderr, "This process is randomizing its grid using ncols = %d and nrows = %d.\n", ncols, nrows);
-	for (i = 1; i <= ncols; i++) {
-		for (j = 1; j <= nrows; j++) {
+	for (i = 1; i <= nrows; i++) {
+		for (j = 1; j <= ncols; j++) {
 			if (rand_double() < prob)
 				life->grid[i][j] = ALIVE;
 		}
@@ -351,8 +403,9 @@ void randomize_grid (struct life_t * life, double prob)
 /*
  * Seed the random number generator based on the
  * process's rank and time. Multiplier is arbitrary.
+ * TODO allow the user to specify determinism.
  */
-void seed_random (int rank) { srandom(time(NULL) + 100*rank); }
+void seed_random (int rank) { srandom(0); }
 
 /*
  * Prepare process for a clean termination.
