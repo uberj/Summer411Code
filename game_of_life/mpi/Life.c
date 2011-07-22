@@ -387,6 +387,7 @@ void randomize_grid (struct life_t * life, double prob)
 
 void print_grid (struct life_t *life)
 {
+	int i, j;
 	for (i = 1; i <= life->nrows; i++){
 		for (j = 1; j <= life->ncols; j++){
 			if (life->grid[i][j] == ALIVE)
