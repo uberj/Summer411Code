@@ -1,13 +1,14 @@
 #!/bin/bash
 
 NUMBERS="./numbers"
-num_mult=7
-num_add=7
-num_div=6
+num_mult=8
+num_add=8
+num_div=7
 
 #run_test <flag> <bn1> <bn2> <expect> <actual>
 
 # Addition Test
+type="A"
 for (( i=1; i <= $num_add; i++ ))
 do
     num_1=$NUMBERS/"ascii_big_num"$i"aA.txt"
@@ -15,8 +16,8 @@ do
     expected=$NUMBERS/"ascii_big_num"$i"eA.txt"
     actual=$NUMBERS/"ascii_big_num"$i"oA.txt"
 
-    ../run -A $num_1 $num_2 $expected $actual
-    #../run -A ./numbers/ascii_big_num$iaA.txt ./numbers/ascii_big_num1bA.txt ./numbers/ascii_big_num1oA.txt ./numbers/ascii_big_num1cA.txt
+    ../run -$type $num_1 $num_2 $expected $actual
+#    echo "-$type $num_1 $num_2 $expected $actual"
     x=$(diff $expected $actual)
     if [ "$x" != "" ]; then
         echo "Addition test $i failed"
@@ -47,6 +48,7 @@ do
 
     # RUN ACTUAL TEST
     ../run -$type $num_1 $num_2 $expected $actual
+#    echo "-$type $num_1 $num_2 $expected $actual"
 
     # PARSE AND ANALYS THE RESULTS
     x=$(diff $expected $actual)

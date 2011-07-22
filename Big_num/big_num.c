@@ -17,7 +17,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
         small_num = n2;
         large_num = n1;
     }
-    // Great the new big number
+    // Get the new big number
     sum = (struct b_number*) malloc(sizeof(struct b_number));
     sum->block_list = calloc(large_num->size,sizeof(unsigned long int));
     sum->size = large_num->size;
@@ -28,9 +28,8 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
 
 /*
  * Add small_num to large_num. Store in sum.
- * @precondition: sum needs to be the same size or larger than large_num.
+ * @Precondition: Sum needs to be the same size or larger than large_num.
  * @Note: b2 + b1 = b2 <- this will work
- *
  */
 void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum){
     unsigned long int done,carry,i,temp_carry,extra;
@@ -52,19 +51,19 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
     /*
      * You only need to add up to the smaller number's size. The new number needs to
      * be as big as the biggest number and can be identical to the larger number
-     * where the smaller number doesn exist
+     * where the smaller number doesn't exist
      */
     carry = done = 0;
     while ( done < small_num->size ){ // Until we are at a stable state
         for( i = 0; i < small_num->size ; i++ ) {
-            if( !( add_chain.links[i].flags & 0x2 ) ) { // Check if initial sum is complete
-                // Do initial sum
+            if( !( add_chain.links[i].flags & 0x2 ) ) { // Check if initial sum is complete.
+                // Do initial sum.
                 carry = c_add(  &add_chain.n1->block_list[i], \
                                 &add_chain.n2->block_list[i], \
                                 &add_chain.sum->block_list[i] );
-                add_chain.links[i].flags |= 0x2; // Set init_sum finished
+                add_chain.links[i].flags |= 0x2; // Set init_sum finished.
                 if ( carry )
-                    add_chain.links[i].flags |= 0x1; // Set carry out bit
+                    add_chain.links[i].flags |= 0x1; // Set carry out bit.
             }
             if( i == 0 ) { // First link. He is done.
                 add_chain.links[i].flags |= 0x4;
@@ -72,14 +71,14 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
                 continue;
             }
             if ( add_chain.links[i-1].flags & 0x4 ) { // Is the link befor us totally done?
-                // prev link is done. Check carry.
+                // Prev link is done. Check carry.
                 if ( add_chain.links[i-1].flags & 0x1 ) { // Was there a carry on the previous?
                     temp_carry = 1;
                     carry = c_add( &temp_carry, &sum->block_list[i], &sum->block_list[i] );
                     if ( carry )
-                        add_chain.links[i].flags |= 0x1; // Set carry out bit
+                        add_chain.links[i].flags |= 0x1; // Set carry out bit.
                 }
-                // Check flags. And say we are finished
+                // Check flags. And say we are finished.
                 if( add_chain.links[i].flags & 0x2 ) { // Being paranoid...
                     add_chain.links[i].flags |= 0x4;
                     done++;
@@ -88,15 +87,20 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
         } // end for
     } // end while
 
+    /*
+     * If this were ever moved onto a cluster, here is where node to node communication would have to be initiated.
+     */
+    /*
     if( add_chain.links[large_num->size-1].flags & 0x1 ){ // Does the last link in the chain have a carry?
         // Create new block in sum, inc size
         //printf("Overflow in last block...\n");
     }
+    */
     /*
-     * If n1 and n2 were different sizes and there was no carry in the 
-     * upper blocks, we need to copy the rest of bigger number into the
+     * If n1 and n2 were different sizes and there was no carry in the
+     * upper blocks, we need to copy the rest of the bigger number into the
      * sum. Pick up where the loop above left off. For now (with no linked
-     * list, a memcpy will work.
+     * list, a memcpy will work.)
      */
     if (large_num->size > small_num->size){
         extra = large_num->size - small_num->size;
@@ -116,7 +120,7 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
                 break;
             }
         }
-        // We need this much overflow
+        // We need this much overflow.
         if( extra > 0 ){
         }
     }
@@ -124,7 +128,7 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
 }
 
 /*
- * Add two long int's numbers. To be used in big num add, flags the user if there is a "carry" (c_add)
+ * Add two long int numbers. To be used in big num add, flags the user if there is a "carry" (c_add)
  * @return  1 if there was an overflow
  *          0 if there was not an overflow
  *
@@ -142,11 +146,11 @@ int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* 
     result = carry ? 1 : 0;
     return result;
 }
+
 /*
  * Create a new struct that is a copy of the original. Pass 1 if you want
  * the data copied over, 0 if you just want the same size struct.
  */
-
 struct b_number* clone( int copy, struct b_number* orig ){
     struct b_number* new;
     new = (struct b_number*) calloc( 1, sizeof(struct b_number));
@@ -158,7 +162,7 @@ struct b_number* clone( int copy, struct b_number* orig ){
 }
 
 /*
- * Pass in two bn's possible created by clone() and copy_bn
+ * Pass in two bn's (possibly) created by clone() and copy_bn
  * will make the two identical. First copy (int)-> Second
  */
 void bn_copy( struct b_number* n1, struct b_number* n2 ) {
@@ -169,54 +173,26 @@ void bn_copy( struct b_number* n1, struct b_number* n2 ) {
 
 /*
  * Convert a number into it's two's compliment.
- * TODO rewrite this using b_inc
  * @Postcondition: *n will be different.
  */
 void two_comp( struct b_number** n ){
-    //struct b_number temp;
-    //struct b_number *new;
     unsigned long int i;
-    //temp.size = 1;
-    //temp.block_list = malloc(sizeof(unsigned long int));
-    //temp.block_list[0] = 1L;
-    // Thread this shit!
     for( i=0; i< (*n)->size; i++ ){
-        (*n)->block_list[i] = ~( (*n)->block_list[i] ); // Not all the values
+        (*n)->block_list[i] = ~( (*n)->block_list[i] ); // Not all the values.
     }
-    //new = b_add( *n, &temp );
     b_inc(*n);
     return;
-    /*
-    free((*n)->block_list);
-    free(*n);
-    *n = new;
-    */
 }
 
 /*
+ * @Preconditions. It is up to the programmer to pass the smaller of the two numbers
+ * as the first parameter and the larger as the second. This will speed up preformance.
+ * If one wanted to, they could write a wrapper to automatically do this.
  * @Return n1 multiplied by mult
- * Side affects: mult is brought down to zero.
- * TODO Optimize: Since we are doing a cheap repetative adds, you should
- * only decrement the smaller of the two (n1 or mult).
  *
-void b_mult( struct b_number *mult, struct b_number *n1 ){
-    struct b_number* large_num;
-    struct b_number* small_num;
-    struct b_number* temp;
-    if( b_msb(mult) < b_msb(n1) ){
-        small_num = mult;
-        large_num = n1;
-    } else {
-        small_num = n1;
-        large_num = mult;
-    }
-    temp = clone( 1, small_num);
-    b_mult_one( temp, large_num );
-}
  */
 
 void b_mult( struct b_number *mult, struct b_number *n1 ){
-    //int i;
     struct b_number *b1;
     struct b_number *b2;
     struct b_number *p_mult; // Copy of mult
@@ -263,7 +239,7 @@ int b_compare( struct b_number *n1, struct b_number *n2 ){
         large_num = n1;
     }
 
-    // If anything exist in large_num in it's upper blocks, it's value is larger.
+    // If anything exist in large_num's upper blocks, it's value is larger.
     for( i = large_num->size-1 ; i >= small_num->size ; i-- ){
         // Starting at the msb of large_num
         if(large_num->block_list[i] != 0){
@@ -278,7 +254,7 @@ int b_compare( struct b_number *n1, struct b_number *n2 ){
         }
     }
     // Now look for a bigger block in either of the two numbers. If no difference is found
-    // the two numbers are equal
+    // the two numbers are equal.
     for( i = small_num->size -1; i>=0; i-- ) {
         if( n1->block_list[i] > n2->block_list[i] ) {
             return -1;
@@ -377,9 +353,9 @@ void b_lshift( struct b_number *n ){
 }
 
 /*
- * Exponentiate: The hacked non-optimized version (repitition and multiplication)
+ * Exponentiate: The hacked non-optimized version (repitition and multiplication).
  * If you pass in a result with an existing struct make sure it's size > 0. b_expn
- * will not touch it and just use the existing struct if result->size > 0. If it 
+ * will not touch it and just use the existing struct if result->size > 0. If it
  * is zero a result struct of arbitrary size should be allocated.
  *
  * @precondition: result is zeroed out and a reasonable size.
@@ -409,6 +385,7 @@ void _b_expn_test ( struct b_number *base, struct b_number *exp, struct b_number
 }
 
 /*
+ * DEPRICATED
  * Division. Pass b_number's numer (numerator) and denom (denominator).
  * Also pass b_number pointers quot (quotent) and remainder (I think you get the picture).
  * @returns:
@@ -480,12 +457,12 @@ void b_divide_one(  struct b_number* numer, struct b_number* denom, \
 
 /*
  * sb_check: A function to help with b_fast_div. To make division faster
- * we need to know when the number we are sqauring is just a little bit
+ * we need to know when the number we are shifting is just a little bit
  * larger than the number it's going to be subtracted from. I.e. If the
  * number being divided is n bits, we want to know when the number being
- * squared is n-1 bits and stop squaring it.
+ * shifted is n-1 bits and stop squaring it.
  *
- * This function's job is to return the posistion of MSB
+ * This function's job is to return the posistion of MSB.
  *
  */
 void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *bit ){
@@ -511,7 +488,7 @@ void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *
 /*
  * A little wrapper function for sb_check.
  * WARNING: If a number is larger than ~4.2 (32 bit's) this function will
- * return wrong results.
+ * return incorrect results.
  *
  */
 unsigned long int b_msb( struct b_number* n) {
@@ -525,15 +502,41 @@ unsigned long int b_msb( struct b_number* n) {
 void b_fast_div(  struct b_number* numer, struct b_number* denom, \
                 struct b_number** quot, struct b_number** remainder ) {
 
+    struct b_number zero;
+    int sanity;
+    zero.size = 1;
+    zero.block_list = malloc(sizeof(unsigned long int));
+    zero.block_list[0] = 0;
+
+    if ( ! b_compare( &zero, denom ) ){ // Dividing by zero
+        printf("ULTIMATE SIN!!!!!!\n");
+        return; //666 ur going to math hell.
+    }
     *quot = clone( 0, numer );
     bzero( (*quot)->block_list , (*quot)->size * sizeof( unsigned long int ));
     *remainder = clone( 0, denom );
     bzero( (*remainder)->block_list , (*remainder)->size * sizeof( unsigned long int ));
+
+    sanity = b_compare( numer, denom );
+    if( sanity == 1 ) { // denom > numer
+        memcpy((*remainder)->block_list, denom->block_list, (*remainder)->size * sizeof( unsigned long int ));
+        return;
+    } else if ( sanity == 0 ) { // denom == numer
+        (*quot)->block_list[0] = 1;
+        return;
+    }
+
     b_fast_div_one( numer, denom, *quot, *remainder);
 }
 
 /*
  * Optimized division - It's fast
+ * @Preconditions.
+ * Numer is a valid b_number.
+ * Denom is non-zero b_number.
+ * @Postconditions
+ * quot will point to a b_number with the correct quotent.
+ * remainder will point to a b_number with the correct remainder.
  */
 
 void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
@@ -610,9 +613,9 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
     }
     goto out;
 
-    // This would be messy edge case in that ^ loop.
+    // This would be a messy edge case in that ^ loop.
 last_divide:
-    // This is a hack since two_comp changes d_pr
+    // This is a hack since two_comp changes d_pr.
     memcpy(d_pr->block_list, denom->block_list, d_pr->size);
     while( b_compare( n_pr, d_pr ) <= 0 ) { // while numer > denom
             two_comp( &d_pr );

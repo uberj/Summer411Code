@@ -6,6 +6,7 @@
 int main( int argc, char **argv ) {
     struct b_number* bn1;
     struct b_number* bn2;
+    struct b_number* bn3;
     FILE *fp,*n1,*n2,*expect,*actual,*remain,*quot;
 
     // run_test <flag> <bn1> <bn2> <expect> <actual> <remain> (remain only with division)
@@ -33,6 +34,7 @@ int main( int argc, char **argv ) {
             break;
         case 'M':
             actual = fopen(argv[5], "w+"); // expected remainder in Division test
+            //b_expn(bn1,bn2);
             mult_test( bn1, bn2, actual );
             close(actual);
             break;
