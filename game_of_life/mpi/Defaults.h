@@ -15,16 +15,16 @@ Updated 2010, Tiago Sommer Damasceno and
 #include <stdbool.h>
 #include <getopt.h>
 
-static const char * opts = "c:r:g:s:p:i:o:t::xh?";
+static const char * opts = "c:r:g:s:i:o:t::xph?";
 static const struct option long_opts[] = {
 	{ "columns", required_argument, NULL, 'c' },
 	{ "rows", required_argument, NULL, 'r' },
 	{ "gens", required_argument, NULL, 'g' },
 	{ "seed", required_argument, NULL, 's' },
-	{ "print", no_argument, NULL, 'p' },
 	{ "output", required_argument, NULL, 'o' },
 	{ "input", required_argument, NULL, 'i' },
 	{ "throttle", optional_argument, NULL, 't' },
+	{ "print", no_argument, NULL, 'p' },
 	{ "help", no_argument, NULL, 'h' },
 	{ NULL, no_argument, NULL, 0 }
 };
