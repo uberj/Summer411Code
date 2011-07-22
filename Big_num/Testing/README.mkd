@@ -33,5 +33,9 @@ and actual results and fail the test if need be.
 
 AUTOMATION
 ==========
-Use the ./make_test.sh script to write a test.
-Run ./runtest.sh to run the test suit.
+Use the...
+    ./make_test.sh
+script to write a test.
+Run...
+    ./runtest.sh
+...to run the test suit.
