@@ -248,7 +248,7 @@ void init_grids (struct life_t * life)
 	lbound = life->rank * life->ncols / life->size;
 	life->ncols = (ubound - lbound) + 1;
 
-	fprintf(stderr, "[Process %d] lower bound is %d upper bound is %d width is %d.\n", life->rank, lbound, ubound, life->ncols);
+	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, lbound, ubound, life->ncols, life->randseed);
 
 	allocate_grids(life);
 
