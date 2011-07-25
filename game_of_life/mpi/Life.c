@@ -50,6 +50,9 @@ int init (struct life_t * life, int * c, char *** v)
 	life->size        = 1;
 	life->ncols       = DEFAULT_SIZE;
 	life->nrows       = DEFAULT_SIZE;
+	life->tcols	  = DEFAULT_SIZE;
+	life->ubound	  = DEFAULT_SIZE - 1;
+	life->lbound      = 0;
 	life->generations = DEFAULT_GENS;
 	life->randseed    = DEFAULT_SEED;
 	life->print	  = false;
@@ -242,8 +245,8 @@ void init_grids (struct life_t * life)
 	}
 
 	// resize so each process is in charge of a vertical slice of the whole board
-	ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
-	lbound = life->rank * life->ncols / life->size;
+	life->ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
+	life->lbound = life->rank * life->ncols / life->size;
 	life->ncols = (ubound - lbound) + 1;
 
 	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, lbound, ubound, life->ncols, life->randseed);
@@ -259,7 +262,7 @@ void init_grids (struct life_t * life)
 
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
-			if (j <= ubound && j >= lbound){
+			if (j <= life->ubound && j >= life->lbound){
 				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i, j-lbound);
 				life->grid[i+1][j-lbound+1]      = ALIVE;
 				life->next_grid[i+1][j-lbound+1] = ALIVE;
@@ -377,10 +380,12 @@ void randomize_grid (struct life_t * life, double prob)
 	int i,j;
 	int ncols = life->ncols;
 	int nrows = life->nrows;
+	int ubound = life->ubound;
+	int lbound = life->lbound;
 
 	for (i = 1; i <= nrows; i++) {
-		for (j = 1; j <= ncols; j++) {
-			if (rand_double() < prob)
+		for (j = 1; j <= tcols; j++) {
+			if (rand_double() < prob && j <= ubound && j > lbound)
 				life->grid[i][j] = ALIVE;
 		}
 	}
@@ -457,7 +462,7 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 
 		switch (opt) {
 			case 'c':
-				life->ncols = strtol(optarg, (char**) NULL, 10);
+				life->ncols = life->tcols = strtol(optarg, (char**) NULL, 10);
 				break;
 			case 'r':
 				life->nrows = strtol(optarg, (char**) NULL, 10);

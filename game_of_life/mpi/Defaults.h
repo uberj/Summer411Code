@@ -40,6 +40,9 @@ const double     INIT_PROB = 0.25;
 struct life_t {
 	int  rank;
 	int  size;
+	int  tcols;
+	int  lbound;
+	int  ubound;
 	int  ncols;
 	int  nrows;
 	int  ** grid;
