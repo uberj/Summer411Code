@@ -3,12 +3,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define B_SIZE 4;
 
 struct b_number {
-    unsigned long int size;
-    unsigned long int* block_list;
+    uint32_t size;
+    uint32_t* block_list;
     int id;
 };
 struct link {
@@ -26,7 +27,7 @@ struct chain {
 
 struct b_number* b_add( struct b_number* n1, struct b_number* n2 );
 void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum);
-int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* sum );
+int c_add( uint32_t* arg1, uint32_t* arg2, uint32_t* sum );
 struct b_number* clone( int copy, struct b_number* orig );
 void bn_copy( struct b_number* n1, struct b_number* n2 ) ;
 void two_comp( struct b_number** n );
@@ -42,8 +43,8 @@ void b_divide(  struct b_number* numer, struct b_number* denom, \
                 struct b_number** quot, struct b_number** remainder ) ;
 void b_divide_one(  struct b_number* numer, struct b_number* denom, \
                 struct b_number* quot, struct b_number* remainder ) ;
-void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *bit );
-unsigned long int b_msb( struct b_number* n) ;
+void sb_check( struct b_number *n, uint32_t *block, uint32_t *bit );
+uint32_t b_msb( struct b_number* n) ;
 void b_fast_div(  struct b_number* numer, struct b_number* denom, \
                 struct b_number** quot, struct b_number** remainder ) ;
 void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \

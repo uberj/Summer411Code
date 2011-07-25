@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include "read.h"
 #include "big_num.h"
@@ -238,7 +239,7 @@ int main( int argc, char **argv ) {
     // Do add.
 
     /*
-    unsigned long int i,sum,c_sum;
+    uint32_t i,sum,c_sum;
     i=1;
     sum=0;
     c_sum = 2;

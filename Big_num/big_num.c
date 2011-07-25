@@ -19,7 +19,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
     }
     // Get the new big number
     sum = (struct b_number*) malloc(sizeof(struct b_number));
-    sum->block_list = calloc(large_num->size,sizeof(unsigned long int));
+    sum->block_list = calloc(large_num->size,sizeof(uint32_t));
     sum->size = large_num->size;
     b_add_one( small_num, large_num, sum );
     return sum;
@@ -32,7 +32,7 @@ struct b_number* b_add( struct b_number* n1, struct b_number* n2 ){
  * @Note: b2 + b1 = b2 <- this will work
  */
 void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b_number* sum){
-    unsigned long int done,carry,i,temp_carry,extra;
+    uint32_t done,carry,i,temp_carry,extra;
     struct chain add_chain;
     /*
      * n14 n13 n12 n11
@@ -107,7 +107,7 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
         extra = large_num->size - small_num->size;
         memcpy( &add_chain.sum->block_list[small_num->size], \
                 &large_num->block_list[small_num->size], \
-                extra*sizeof(unsigned long int) );
+                extra*sizeof(uint32_t) );
         /* While there is still a cary in the upper blocks of sum, add.
          * I can't see how this could be done in parallel.
          */
@@ -134,7 +134,7 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
  *          0 if there was not an overflow
  *
  */
-int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* sum ){
+int c_add( uint32_t* arg1, uint32_t* arg2, uint32_t* sum ){
     int carry = 0;
     int result;
     __asm__ (   "addl %%ebx, %%ecx;"
@@ -155,10 +155,10 @@ int c_add( long unsigned int* arg1, long unsigned int* arg2, long unsigned int* 
 struct b_number* clone( int copy, struct b_number* orig ){
     struct b_number* new;
     new = (struct b_number*) calloc( 1, sizeof(struct b_number));
-    new->block_list = (unsigned long int*) malloc(sizeof(unsigned long int) * orig->size );
+    new->block_list = (uint32_t*) malloc(sizeof(uint32_t) * orig->size );
     new->size = orig->size;
     if( copy )
-        memcpy( new->block_list, orig->block_list, sizeof(unsigned long int) * orig->size );
+        memcpy( new->block_list, orig->block_list, sizeof(uint32_t) * orig->size );
     return new;
 }
 
@@ -169,7 +169,7 @@ struct b_number* clone( int copy, struct b_number* orig ){
 void bn_copy( struct b_number* n1, struct b_number* n2 ) {
     n2->size = n1->size;
     n2->id = n1->id;
-    memcpy(&n2->block_list[0],&n1->block_list[0],(n1->size)*sizeof(unsigned long int));
+    memcpy(&n2->block_list[0],&n1->block_list[0],(n1->size)*sizeof(uint32_t));
 }
 
 /*
@@ -177,7 +177,7 @@ void bn_copy( struct b_number* n1, struct b_number* n2 ) {
  * @Postcondition: *n will be different.
  */
 void two_comp( struct b_number** n ){
-    unsigned long int i;
+    uint32_t i;
     for( i=0; i< (*n)->size; i++ ){
         (*n)->block_list[i] = ~( (*n)->block_list[i] ); // Not all the values.
     }
@@ -199,7 +199,7 @@ void b_mult( struct b_number *mult, struct b_number *n1 ){
     struct b_number *p_mult; // Copy of mult
     struct b_number zero;
     zero.size = 1;
-    zero.block_list = malloc(sizeof(unsigned long int));
+    zero.block_list = malloc(sizeof(uint32_t));
     zero.block_list[0] = 0;
     p_mult = clone( 1, mult);
 
@@ -271,7 +271,7 @@ int b_compare( struct b_number *n1, struct b_number *n2 ){
  */
 void b_inc( struct b_number *n ){
     int carry,i;
-    unsigned long int one;
+    uint32_t one;
     one = 1;
 
     for( i=0; i<n->size; i++ ){
@@ -304,8 +304,8 @@ void b_dec( struct b_number *n ){
  */
 void b_rshift( struct b_number *n ){
     int i,prev_carry,carry;
-    unsigned long int lsb = 1L;
-    unsigned long int msb = 0x80000000;
+    uint32_t lsb = 1L;
+    uint32_t msb = 0x80000000;
 
     prev_carry = carry = 0;
     for( i=n->size-1; i >= 0; i-- ){
@@ -331,7 +331,7 @@ void b_rshift( struct b_number *n ){
  */
 void b_lshift( struct b_number *n ){
     int i,prev_carry,carry;
-    unsigned long int msb = 0x80000000;
+    uint32_t msb = 0x80000000;
 
     prev_carry = carry = 0;
     for( i=0; i<n->size; i++ ){
@@ -365,7 +365,7 @@ void b_lshift( struct b_number *n ){
 void b_expn( struct b_number *base, struct b_number *exp, struct b_number *result ) {
     struct b_number zero;
     zero.size = 1;
-    zero.block_list = malloc(sizeof(unsigned long int));
+    zero.block_list = malloc(sizeof(uint32_t));
     zero.block_list[0] = 0;
 
     result->block_list[0] = 1;
@@ -381,7 +381,7 @@ void b_expn( struct b_number *base, struct b_number *exp, struct b_number *resul
 void _b_expn_test ( struct b_number *base, struct b_number *exp, struct b_number **result) {
     *result = (struct b_number*)malloc(sizeof(struct b_number));
     (*result)->size = 8; //Something reasonable
-    (*result)->block_list = (unsigned long int*) calloc((*result)->size,(*result)->size*sizeof(unsigned long int));
+    (*result)->block_list = (uint32_t*) calloc((*result)->size,(*result)->size*sizeof(uint32_t));
     b_expn( base, exp, *result );
 }
 
@@ -409,8 +409,8 @@ void b_divide(  struct b_number* numer, struct b_number* denom, \
     (*remainder)->size = denom->size;
 
     //Allocate block_list's
-    (*quot)->block_list = (unsigned long int*) calloc((*quot)->size,(*quot)->size*sizeof(unsigned long int));
-    (*remainder)->block_list = (unsigned long int*) calloc((*remainder)->size,(*remainder)->size*sizeof(unsigned long int));
+    (*quot)->block_list = (uint32_t*) calloc((*quot)->size,(*quot)->size*sizeof(uint32_t));
+    (*remainder)->block_list = (uint32_t*) calloc((*remainder)->size,(*remainder)->size*sizeof(uint32_t));
 
     b_divide_one( numer, denom, *quot, *remainder );
 
@@ -432,7 +432,7 @@ void b_divide_one(  struct b_number* numer, struct b_number* denom, \
 
     twos_denom = clone( 0, numer ); // Make a copy. It has to be size of numer because we need the over flow bit to work it's magic.
     // Now copy in all the bits in denom .
-    memcpy(twos_denom->block_list, denom->block_list, numer->size * sizeof(unsigned long int));
+    memcpy(twos_denom->block_list, denom->block_list, numer->size * sizeof(uint32_t));
     two_comp(&twos_denom); // Convert to two's compliment.
     sum = clone( 0, numer);
 
@@ -452,7 +452,7 @@ void b_divide_one(  struct b_number* numer, struct b_number* denom, \
     }
 
     // Move the rest of numer into remainer.
-    memcpy(remainder->block_list,numer->block_list,(remainder->size)*sizeof(unsigned long int));
+    memcpy(remainder->block_list,numer->block_list,(remainder->size)*sizeof(uint32_t));
 }
 
 
@@ -466,16 +466,16 @@ void b_divide_one(  struct b_number* numer, struct b_number* denom, \
  * This function's job is to return the posistion of MSB.
  *
  */
-void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *bit ){
-    unsigned long int i,j,index;
+void sb_check( struct b_number *n, uint32_t *block, uint32_t *bit ){
+    uint32_t i,j,index;
     // Find the highest block that is not zero
     for( i = (n->size)-1; i>=0; i--){
         if( n->block_list[i] > 0 )
             break;
     }
     // We found a non zero block. Check were the MSB is
-    index = pow(2,sizeof(unsigned long int)*8-1);
-    for( j = (sizeof(unsigned long int)*8)-1; j >= 0; j-- ){
+    index = pow(2,sizeof(uint32_t)*8-1);
+    for( j = (sizeof(uint32_t)*8)-1; j >= 0; j-- ){
         if( index & n->block_list[i] )
             break;
         else
@@ -492,9 +492,9 @@ void sb_check( struct b_number *n, unsigned long int *block, unsigned long int *
  * return incorrect results.
  *
  */
-unsigned long int b_msb( struct b_number* n) {
+uint32_t b_msb( struct b_number* n) {
 
-    unsigned long int n_size,n_bit;// In bits
+    uint32_t n_size,n_bit;// In bits
     sb_check( n, &n_size, &n_bit);
     return n_size * 32 + n_bit;
 }
@@ -506,7 +506,7 @@ void b_fast_div(  struct b_number* numer, struct b_number* denom, \
     struct b_number zero;
     int sanity;
     zero.size = 1;
-    zero.block_list = malloc(sizeof(unsigned long int));
+    zero.block_list = malloc(sizeof(uint32_t));
     zero.block_list[0] = 0;
 
     if ( ! b_compare( &zero, denom ) ){ // Dividing by zero
@@ -514,13 +514,13 @@ void b_fast_div(  struct b_number* numer, struct b_number* denom, \
         return; //666 ur going to math hell.
     }
     *quot = clone( 0, numer );
-    bzero( (*quot)->block_list , (*quot)->size * sizeof( unsigned long int ));
+    bzero( (*quot)->block_list , (*quot)->size * sizeof( uint32_t ));
     *remainder = clone( 0, denom );
-    bzero( (*remainder)->block_list , (*remainder)->size * sizeof( unsigned long int ));
+    bzero( (*remainder)->block_list , (*remainder)->size * sizeof( uint32_t ));
 
     sanity = b_compare( numer, denom );
     if( sanity == 1 ) { // denom > numer
-        memcpy((*remainder)->block_list, denom->block_list, (*remainder)->size * sizeof( unsigned long int ));
+        memcpy((*remainder)->block_list, denom->block_list, (*remainder)->size * sizeof( uint32_t ));
         return;
     } else if ( sanity == 0 ) { // denom == numer
         (*quot)->block_list[0] = 1;
@@ -542,8 +542,8 @@ void b_fast_div(  struct b_number* numer, struct b_number* denom, \
 
 void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
                 struct b_number* quot, struct b_number* remainder ) {
-    unsigned long int shift, adjust;
-    unsigned long int msb_n, msb_d;
+    uint32_t shift, adjust;
+    uint32_t msb_n, msb_d;
     int i;
     /*
      * msb = most significant bit
@@ -564,18 +564,18 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
 
     n_pr = clone( 1, numer );
     d_pr = clone( 0, numer );
-    bzero( d_pr->block_list , d_pr->size * sizeof( unsigned long int ));
-    memcpy( d_pr->block_list, denom->block_list, denom->size*sizeof(unsigned long int));
+    bzero( d_pr->block_list , d_pr->size * sizeof( uint32_t ));
+    memcpy( d_pr->block_list, denom->block_list, denom->size*sizeof(uint32_t));
 
     two.size = 1;
-    two.block_list = (unsigned long int*) malloc(sizeof(unsigned long int));
+    two.block_list = (uint32_t*) malloc(sizeof(uint32_t));
     two.block_list[0] = 2;
 
     b_shift.size = 1;
-    b_shift.block_list =(unsigned long int*) malloc(sizeof(unsigned long int));
+    b_shift.block_list =(uint32_t*) malloc(sizeof(uint32_t));
 
     temp_exp = clone( 0, numer );
-    bzero( temp_exp->block_list , temp_exp->size * sizeof( unsigned long int ));
+    bzero( temp_exp->block_list , temp_exp->size * sizeof( uint32_t ));
 
     // Initial up shifting
     if( msb_n == msb_d )
@@ -599,7 +599,7 @@ void b_fast_div_one(  struct b_number* numer, struct b_number* denom, \
             b_shift.block_list[0] = shift;
             b_expn( &two, &b_shift, temp_exp );
             b_add_one(quot, temp_exp, quot);
-            bzero( temp_exp->block_list , temp_exp->size * sizeof( unsigned long int ));
+            bzero( temp_exp->block_list , temp_exp->size * sizeof( uint32_t ));
         }
         if( b_msb( n_pr ) <= b_msb( denom ) )
             goto last_divide;
@@ -636,7 +636,7 @@ out:
         b_inc(quot);
     } else {
         // remainder = n_pr
-        memcpy(remainder->block_list, n_pr->block_list, remainder->size*sizeof(unsigned long int));
+        memcpy(remainder->block_list, n_pr->block_list, remainder->size*sizeof(uint32_t));
     }
 
 }
