@@ -386,7 +386,7 @@ void randomize_grid (struct life_t * life, double prob)
 	for (i = 1; i <= nrows; i++) {
 		for (j = 1; j <= tcols; j++) {
 			if (rand_double() < prob && j <= ubound && j > lbound)
-				life->grid[i][j] = ALIVE;
+				life->grid[i][ncols%j] = ALIVE;
 		}
 	}
 }
