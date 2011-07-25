@@ -22,18 +22,18 @@ void convert_bn_to_file( FILE *fp, struct b_number** bn ){
      */
     n1 = clone( 1, *bn ); // We are gonig to mutate bn
     ten = clone( 0, *bn ); // Needed for fast_div_one
-    bzero( ten->block_list , ten->size * sizeof( unsigned long int ));
+    bzero( ten->block_list , ten->size * sizeof( uint32_t ));
     ten->block_list[0] = 10;
 
     n3 = (struct b_number *)malloc(sizeof(struct b_number));
     n3->size = 1;
-    n3->block_list = (unsigned long int*) malloc(sizeof(unsigned long int));
+    n3->block_list = (uint32_t*) malloc(sizeof(uint32_t));
 
     n2 = clone( 1, n1 );
 
     while( b_compare( ten, n1 ) >= 0 ){
-        bzero( n2->block_list , n2->size * sizeof( unsigned long int ));
-        bzero( n3->block_list , n3->size * sizeof( unsigned long int ));
+        bzero( n2->block_list , n2->size * sizeof( uint32_t ));
+        bzero( n3->block_list , n3->size * sizeof( uint32_t ));
         b_fast_div_one( n1, ten, n2, n3 );
         num = n3->block_list[0] + '0';
         n4 = n1;
@@ -58,7 +58,7 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
     char num;
     int f_size,i;
     long double result,max;
-    unsigned long int size;
+    uint32_t size;
     struct b_number temp;
     struct b_number* n1;
     struct b_number* n2;
@@ -75,17 +75,17 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
     n1 = (struct b_number*) malloc(sizeof(struct b_number));
     max = pow(10,f_size+1);
     result = ( (long double)log(max)/(long double)log(2) ) + 1;
-    size = result / (sizeof(unsigned long int)*8);
+    size = result / (sizeof(uint32_t)*8);
     n1->size = size+1;
     //printf("Optimal size: %lu\n",n1->size);
-    n1->block_list = (unsigned long int*) calloc(n1->size,sizeof(unsigned long int));
+    n1->block_list = (uint32_t*) calloc(n1->size,sizeof(uint32_t));
 
     // Make copies
     n2 = clone( 1, n1 );
 
     // Set up temp
     temp.size = 1;
-    temp.block_list = malloc(sizeof(unsigned long int));
+    temp.block_list = malloc(sizeof(uint32_t));
 
     /*
      * For now just add two numbers. Later when big num add works use that.
@@ -98,7 +98,7 @@ void convert_file_to_bn( FILE *fp , struct b_number** bn ){
          * As far as I'm concerned this is a hack until I can write a
          * multiplication function.
          */
-        temp.block_list[0] = (unsigned long int) num - '0';
+        temp.block_list[0] = (uint32_t) num - '0';
         n1 = b_add( n2, &temp );
         free(n2->block_list);
         free(n2);
