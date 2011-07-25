@@ -380,6 +380,7 @@ void randomize_grid (struct life_t * life, double prob)
 	int i,j;
 	int ncols = life->ncols;
 	int nrows = life->nrows;
+	int tcols = life->tcols;
 	int ubound = life->ubound;
 	int lbound = life->lbound;
 
