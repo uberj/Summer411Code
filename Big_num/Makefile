@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -lm
+CFLAGS = -g -Wall -lm -fopenmp
 
 objects = main.c read.c big_num.c tests.c
 

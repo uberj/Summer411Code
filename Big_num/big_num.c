@@ -55,6 +55,7 @@ void b_add_one( struct b_number* small_num, struct b_number* large_num, struct b
      */
     carry = done = 0;
     while ( done < small_num->size ){ // Until we are at a stable state
+        #pragma omp parallel for
         for( i = 0; i < small_num->size ; i++ ) {
             if( !( add_chain.links[i].flags & 0x2 ) ) { // Check if initial sum is complete.
                 // Do initial sum.
