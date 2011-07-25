@@ -230,7 +230,6 @@ void init_grids (struct life_t * life)
 {
 	FILE * fd;
 	int i,j;
-	int ubound, lbound;
 
 	if (life->infile != NULL) {
 		if ((fd = fopen(life->infile, "r")) == NULL) {
@@ -247,9 +246,9 @@ void init_grids (struct life_t * life)
 	// resize so each process is in charge of a vertical slice of the whole board
 	life->ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
 	life->lbound = life->rank * life->ncols / life->size;
-	life->ncols = (ubound - lbound) + 1;
+	life->ncols = (life->ubound - life->lbound) + 1;
 
-	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, lbound, ubound, life->ncols, life->randseed);
+	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, life->lbound, life->ubound, life->ncols, life->randseed);
 
 	allocate_grids(life);
 
@@ -263,7 +262,7 @@ void init_grids (struct life_t * life)
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
 			if (j <= life->ubound && j >= life->lbound){
-				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i, j-lbound);
+				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i, j - life->lbound);
 				life->grid[i+1][j-lbound+1]      = ALIVE;
 				life->next_grid[i+1][j-lbound+1] = ALIVE;
 			}
