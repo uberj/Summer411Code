@@ -237,15 +237,15 @@ void init_grids (struct life_t * life)
 			exit(EXIT_FAILURE);
 		}
 
-		if (fscanf(fd, "%d %d\n", &life->ncols, &life->nrows) == EOF) {
+		if (fscanf(fd, "%d %d\n", &life->nrows, &life->tcols) == EOF) {
 			printf("File must at least define grid dimensions!\nExiting.\n");
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	// resize so each process is in charge of a vertical slice of the whole board
-	life->ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
-	life->lbound = life->rank * life->ncols / life->size;
+	life->ubound = (((life->rank + 1) * life->tcols / life->size) - 1); // we want 1 col of (overlap?)
+	life->lbound = life->rank * life->tcols / life->size;
 	life->ncols = (life->ubound - life->lbound) + 1;
 
 	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, life->lbound, life->ubound, life->ncols, life->randseed);
@@ -289,6 +289,8 @@ void write_grid (struct life_t * life)
 	int i,j;
 	int ncols   = life->ncols;
 	int nrows   = life->nrows;
+	int lbound  = life->lbound;
+	int tcols   = life->tcols;
 	int ** grid = life->grid;
 	MPI_Status status;
 	char buffer[20];
@@ -301,12 +303,12 @@ void write_grid (struct life_t * life)
 			exit(EXIT_FAILURE);
 		}
 
-		//fprintf(fd, "%d %d\n", ncols, nrows);
+		fprintf(fd, "%d %d\n", nrows, tcols);
 
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] == ALIVE)
-					fprintf(fd, "%d %d\n", i-1, j-1);
+					fprintf(fd, "%d %d\n", i-1, j-lbound-1);
 			}
 		}
 		fclose(fd);
@@ -331,7 +333,7 @@ void write_grid (struct life_t * life)
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] == ALIVE){
-                                        sprintf(buffer,"%d %d", i-1, j-1); 
+                                        sprintf(buffer,"%d %d", i-1, j-lbound-1); 
 					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
 				}
 			}
