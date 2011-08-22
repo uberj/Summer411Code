@@ -50,6 +50,9 @@ int init (struct life_t * life, int * c, char *** v)
 	life->size        = 1;
 	life->ncols       = DEFAULT_SIZE;
 	life->nrows       = DEFAULT_SIZE;
+	life->tcols	  = DEFAULT_SIZE;
+	life->ubound	  = DEFAULT_SIZE - 1;
+	life->lbound      = 0;
 	life->generations = DEFAULT_GENS;
 	life->randseed    = DEFAULT_SEED;
 	life->print	  = false;
@@ -170,13 +173,13 @@ void copy_bounds (struct life_t * life)
 			grid[i][ncols+1] = grid[i][1];
 			grid[i][0] = grid[i][ncols];
 		}
-
+        }
 		// copy corners
 		grid[0][0]             = grid[nrows][0];
 		grid[nrows+1][0]       = grid[1][0];
 		grid[0][ncols+1]       = grid[nrows][ncols+1];
 		grid[nrows+1][ncols+1] = grid[1][ncols+1];
-	}
+	
 
 	// copy top and bottom
 	for (i = 1; i <= ncols; i++) {
@@ -227,7 +230,6 @@ void init_grids (struct life_t * life)
 {
 	FILE * fd;
 	int i,j;
-	int ubound, lbound;
 
 	if (life->infile != NULL) {
 		if ((fd = fopen(life->infile, "r")) == NULL) {
@@ -235,18 +237,18 @@ void init_grids (struct life_t * life)
 			exit(EXIT_FAILURE);
 		}
 
-		if (fscanf(fd, "%d %d\n", &life->ncols, &life->nrows) == EOF) {
+		if (fscanf(fd, "%d %d\n", &life->nrows, &life->tcols) == EOF) {
 			printf("File must at least define grid dimensions!\nExiting.\n");
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	// resize so each process is in charge of a vertical slice of the whole board
-	ubound = (((life->rank + 1) * life->ncols / life->size) - 1); // we want 1 col of (overlap?)
-	lbound = life->rank * life->ncols / life->size;
-	life->ncols = (ubound - lbound) + 1;
+	life->ubound = (((life->rank + 1) * life->tcols / life->size) - 1); // we want 1 col of (overlap?)
+	life->lbound = life->rank * life->tcols / life->size;
+	life->ncols = (life->ubound - life->lbound) + 1;
 
-	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, lbound, ubound, life->ncols, life->randseed);
+	printf("[Process %d] lower bound is %d upper bound is %d width is %d random seed is %d.\n", life->rank, life->lbound, life->ubound, life->ncols, life->randseed);
 
 	allocate_grids(life);
 
@@ -259,10 +261,10 @@ void init_grids (struct life_t * life)
 
 	if (life->infile != NULL) {
 		while (fscanf(fd, "%d %d\n", &i, &j) != EOF) {
-			if (j <= ubound && j >= lbound){
-				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i, j-lbound);
-				life->grid[i+1][j-lbound+1]      = ALIVE;
-				life->next_grid[i+1][j-lbound+1] = ALIVE;
+			if (j <= life->ubound && j >= life->lbound){
+				fprintf(stderr, "[Process %d] %d %d -> %d %d.\n", life->rank, i, j, i, j - life->lbound);
+				life->grid[i+1][j - life->lbound + 1]      = ALIVE;
+				life->next_grid[i+1][j- life->lbound + 1] = ALIVE;
 			}
 		}
 		
@@ -287,6 +289,8 @@ void write_grid (struct life_t * life)
 	int i,j;
 	int ncols   = life->ncols;
 	int nrows   = life->nrows;
+	int lbound  = life->lbound;
+	int tcols   = life->tcols;
 	int ** grid = life->grid;
 	MPI_Status status;
 	char buffer[20];
@@ -299,12 +303,12 @@ void write_grid (struct life_t * life)
 			exit(EXIT_FAILURE);
 		}
 
-		//fprintf(fd, "%d %d\n", ncols, nrows);
+		fprintf(fd, "%d %d\n", nrows, tcols);
 
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] == ALIVE)
-					fprintf(fd, "%d %d\n", i-1, j-1);
+					fprintf(fd, "%d %d\n", i-1, j+lbound-1);
 			}
 		}
 		fclose(fd);
@@ -329,7 +333,7 @@ void write_grid (struct life_t * life)
 		for (i = 1; i <= nrows; i++) {
 			for (j = 1; j <= ncols; j++) {
 				if (grid[i][j] == ALIVE){
-                                        sprintf(buffer,"%d %d", i-1, j-1); 
+                                        sprintf(buffer,"%d %d", i-1, j+lbound-1); 
 					MPI_Send(buffer, 20, MPI_CHAR, 0, collect_tag, MPI_COMM_WORLD);
 				}
 			}
@@ -377,11 +381,14 @@ void randomize_grid (struct life_t * life, double prob)
 	int i,j;
 	int ncols = life->ncols;
 	int nrows = life->nrows;
+	int tcols = life->tcols;
+	int ubound = life->ubound;
+	int lbound = life->lbound;
 
 	for (i = 1; i <= nrows; i++) {
-		for (j = 1; j <= ncols; j++) {
-			if (rand_double() < prob)
-				life->grid[i][j] = ALIVE;
+		for (j = 1; j <= tcols; j++) {
+			if (rand_double() < prob && j <= ubound+1 && j >= lbound+1)
+				life->grid[i][j - lbound] = ALIVE;
 		}
 	}
 }
@@ -457,7 +464,7 @@ void parse_args (struct life_t * life, int argc, char ** argv)
 
 		switch (opt) {
 			case 'c':
-				life->ncols = strtol(optarg, (char**) NULL, 10);
+				life->ncols = life->tcols = strtol(optarg, (char**) NULL, 10);
 				break;
 			case 'r':
 				life->nrows = strtol(optarg, (char**) NULL, 10);
