@@ -5,21 +5,21 @@ The goal of this entry is to explain how to use qemu and gdb to trace and step t
 
 For debugging kernel code you will need:
 * kernel source tree - if you plan to hack on the code I recommend cloning a tree using git at kernel.org. For this example I used the 2.6.39 kernel. _3.0.4 works too :)_
-* qemu - You are going to need to compile this or get it from your distrobution's repo. Google "How to install qemu" if you get stuck at this step.
+* qemu - You are going to need to compile this or get it from your distribution's repository. Google "How to install qemu" if you get stuck at this step.
 * gdb
-* gentoo stage3 tar ball - This is used for populating the virtual partition. Note that gentoo's stage3 isn't necissarily the only solution. I just found it an easy way to populate the root file system.
+* gentoo stage3 tar ball - This is used for populating the virtual partition. Note that gentoo's stage3 isn't necessarily the only solution. I just found it an easy way to populate the root file system.
 
 The root file system (rootfs).
 ------------------------------
 - - - - - - - - - -
 -A little background-
 
-If you are running linux then your computer, and your kernel, need a root file system to function. The root filesystem is the main partition that your kernel mounts during boot. For emulating our kernel we are going to need to craft our own virtual disk and a rootfs.
+If you are running linux then your computer, and your kernel, need a root file system to function. The root filesystem is the main partition that your kernel mounts during boot. For emulating our kernel we are going to need to craft our own virtual disk and rootfs.
 
-Most people, like me, have a separate partition on disk where you store the kernels you are going to boot a long with the boot loader, usually grub, configuration file. During emulation qemu can act as the boot loader. By passing a file to be used as the kernel along with kernel boot parameters we can avoid making a separate boot partition.
+Most people, like me, have a separate partition on disk where you store the kernels you are going to boot along with the boot loader, usually grub, configuration file. During emulation qemu can act as the boot loader. By passing a file to be used as the kernel along with kernel boot parameters we can avoid making a separate boot partition.
 - - - - - - - - - -
 
-First we need a place to stort our virtual disk. There are two options: dd and using qemu's built in image creator. If you are not familiar with dd or how it works, I recommend you read about it, it is a useful utility
+First we need a place to start our virtual disk. There are two options: dd and qemu's built in image creator. If you are not familiar with dd or how it works, I recommend you read about it, it is a useful utility.
 
 	man dd
 
@@ -31,14 +31,14 @@ We now need to actually format the file we just made with a file system, but to 
 
 	man losetup
 
-First check for an available loop back device. These are stored in /dev/ and have the name format loop[0-8]. To check to make sure that the device you are trying to use is not busy, check the output of losetup _device name_:
+First check for an available loop back device. These are stored in /dev/ and have the name format loop[0-8]. To make sure that the device you are trying to use is not busy, check the output of losetup _device name_:
 
 	glug uberj # losetup /dev/loop0
 	loop: can't get info on device /dev/loop0: No such device or address
 
 If you see the above output then that device is *not* being used (a good thing). If you see a message saying the device is busy or in use try loop1 then 1oop2, loop3, etc.
 
-If you can't get an available device, cross your finders and run:
+If you can't get an available device, cross your fingers and run:
 	
 	losetup -d /dev/loop[0-9]
 
@@ -97,7 +97,7 @@ Unmount your file system and disassociate the disk image from the loop back devi
 Compiling your kernel
 ---------------------
 
-To be able to acutally debug your kernel you are going to need to have special kernel options enabled. Specifically make sure that both of the following options are enabled.
+To be able to actually debug your kernel you are going to need to have special kernel options enabled. Specifically make sure that both of the following options are enabled.
 	
 	CONFIG_DEBUG_INFO=y
 	CONFIG_DEBUG_KERNEL=y
@@ -111,7 +111,7 @@ At this point your kernel should be set up with the correct options to have debu
                               
 	make && make modules_install	
 
-After you are done swashbuckleing on office chairs with your coworkers you can try starting qemu with the kernel you just compiled.
+After you are done swashbuckling on office chairs with your coworkers you can try starting qemu with the kernel you just compiled.
 
 _Note: The kernel build system builds multiple kernels used for multiple purposes. The kernel that you normally have in your /boot/ directory is usually in the form, vmlinuz-$(uname -r). This kernel is compressed and originates in the kernel build directory arch/x86/boot/bzImage (obviously this directory is different if you selected ARM, PPC, ect). For debugging purposes this compressed kernel is not all that useful. The kernel that actually has debugging symbols is in the kernel root directory and is called "vmlinux". For a more elegant explination of vmlinux and vmlinuz files, see (this)[kernelfiles]._
 
@@ -119,7 +119,7 @@ The command I used (you can tinker with the options) to start qemu was:
 
 	qemu -S -s -kernel arch/x86/boot/bzImage -hda ~/411os.img -append "root=/dev/sda console=ttyS0" -serial stdio
 
-Where 411os.img is the file we built in the first half of this write up. One thing to note is which kernel we are passing to qemu. Using the -kernel parameter I passed the kernel I just compiled that is stored in the (kernel root directory)/arch/x86/boot/bzImage. Here is an explaination of some of the options used (all taken from the qemu man pages).
+Where 411os.img is the file we built in the first half of this write up. One thing to note is which kernel we are passing to qemu. Using the -kernel parameter I passed the kernel I just compiled that is stored in the (kernel root directory)/arch/x86/boot/bzImage. Here is an explanation of some of the options used (all taken from the qemu man pages).
 
 	man qemu <--- use this if you have more questions about options
 	-S Do not start CPU at startup (you must type 'c' in the monitor).
@@ -135,7 +135,7 @@ Where 411os.img is the file we built in the first half of this write up. One thi
 	-append cmdline
            Use cmdline as kernel command line. (remember, qemu is doing the job that grub and lilo usually do).
 
-_One thing that I'm not quite sure about is how qemu decides to virualize the root device as /dev/sda/. It probably has something to do with the -hda option, but kernel boot protocols and qemu's virtualization are quite magical._
+_One thing that I'm not quite sure about is how qemu decides to virtualize the root device as /dev/sda/. It probably has something to do with the -hda option, but kernel boot protocols and qemu's virtualization are quite magical._
 
 If everything went well when you ran the previous command you should be confronted with a new X11 window and a little bit of output in the terminal where you ran the command. If you used the -S option, qemu is now waiting for you to connect to it's gdbserver and tell it to continue execution. Let's do that.
 
