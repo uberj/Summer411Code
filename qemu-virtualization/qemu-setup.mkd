@@ -1,0 +1,181 @@
+LINUX Debugging using QEMU
+==========================
+
+The goal of this entry is to explain how to use qemu and gdb to trace and step through the execution of the linux kernel in real time. This can be useful for learning the flow of execution and debugging high level code in the kernel (like scheduling and memory management).
+
+For debugging kernel code you will need:
+* kernel source tree - if you plan to hack on the code I recommend cloning a tree using git at kernel.org. For this example I used the 2.6.39 kernel. _3.0.4 works too :)_
+* qemu - You are going to need to compile this or get it from your distrobution's repo. Google "How to install qemu" if you get stuck at this step.
+* gdb
+* gentoo stage3 tar ball - This is used for populating the virtual partition. Note that gentoo's stage3 isn't necissarily the only solution. I just found it an easy way to populate the root file system.
+
+The root file system (rootfs).
+------------------------------
+- - - - - - - - - -
+-A little background-
+
+If you are running linux then your computer, and your kernel, need a root file system to function. The root filesystem is the main partition that your kernel mounts during boot. For emulating our kernel we are going to need to craft our own virtual disk and a rootfs.
+
+Most people, like me, have a separate partition on disk where you store the kernels you are going to boot a long with the boot loader, usually grub, configuration file. During emulation qemu can act as the boot loader. By passing a file to be used as the kernel along with kernel boot parameters we can avoid making a separate boot partition.
+- - - - - - - - - -
+
+First we need a place to stort our virtual disk. There are two options: dd and using qemu's built in image creator. If you are not familiar with dd or how it works, I recommend you read about it, it is a useful utility
+
+	man dd
+
+To use qemu's built in tool to create a 2G file, open up a terminal and execute:
+
+	qemu-img create 411os.img 2G
+
+We now need to actually format the file we just made with a file system, but to do that we need to encapsulate our file as an actual disk, enter losetup.
+
+	man losetup
+
+First check for an available loop back device. These are stored in /dev/ and have the name format loop[0-8]. To check to make sure that the device you are trying to use is not busy, check the output of losetup _device name_:
+
+	glug uberj # losetup /dev/loop0
+	loop: can't get info on device /dev/loop0: No such device or address
+
+If you see the above output then that device is *not* being used (a good thing). If you see a message saying the device is busy or in use try loop1 then 1oop2, loop3, etc.
+
+If you can't get an available device, cross your finders and run:
+	
+	losetup -d /dev/loop[0-9]
+
+Hopefully you didn't just break something.
+
+Once you find a loopback device, bind the file you made to the device:
+
+	losetup /dev/loop0 411os.img
+
+To check to see whether the above command was successful check the return value by echoing a built in bash variable, 0 means success.
+
+	echo $
+
+Before we can mount the device we need to format the disk with a file system. Any of the ext's will work, I chose ext2 for size reasons. To format the file use the mkfs or mkfs.ext2 utilities.
+
+	man mkfs mkfs.ext2
+
+To format run:
+	
+	mkfs -t ext2 /dev/loop0
+
+
+Now that we have a device (pseudo device, really) with a file system we need to mount it on our own local filesystem. First make a mount point.
+
+	mkdir /mnt/vmd
+
+Now mount the device.
+
+	mount /dev/loop0 /mnt/vmd
+
+Check your mounted file systems to make sure things went well.
+
+	df -u
+
+You should see a line showing your loop back device and mount point:
+
+	/dev/loop1                2GM     0  0M   0% /mnt/vmd
+
+Setting up the disk.
+--------------------
+This part is really easy. Download a stage3 tar ball from gentoo.osuosl.org and untar while in the root of your device.
+
+	cd /mnt/vmd
+	tar xjf stage3-i686-20110802.tar.bz2
+
+You should now have the bare essentials to boot your kernel and interact with a functioning system.
+
+Clean up
+--------
+
+Unmount your file system and disassociate the disk image from the loop back device.
+
+	umount /mnt/vmd
+	losetup -d /dev/loop0
+
+Compiling your kernel
+---------------------
+
+To be able to acutally debug your kernel you are going to need to have special kernel options enabled. Specifically make sure that both of the following options are enabled.
+	
+	CONFIG_DEBUG_INFO=y
+	CONFIG_DEBUG_KERNEL=y
+
+If you don't like manually editing the kernel .config file, go ahead and use the `make menuconfig` utility.
+
+     Location:                                                                                         
+       -> Kernel hacking  (You will find the needed options in this subtree.) 
+
+At this point your kernel should be set up with the correct options to have debugging symbols built into it. Go ahead and build the kernel.
+                              
+	make && make modules_install	
+
+After you are done swashbuckleing on office chairs with your coworkers you can try starting qemu with the kernel you just compiled.
+
+_Note: The kernel build system builds multiple kernels used for multiple purposes. The kernel that you normally have in your /boot/ directory is usually in the form, vmlinuz-$(uname -r). This kernel is compressed and originates in the kernel build directory arch/x86/boot/bzImage (obviously this directory is different if you selected ARM, PPC, ect). For debugging purposes this compressed kernel is not all that useful. The kernel that actually has debugging symbols is in the kernel root directory and is called "vmlinux". For a more elegant explination of vmlinux and vmlinuz files, see (this)[kernelfiles]._
+
+The command I used (you can tinker with the options) to start qemu was:
+
+	qemu -S -s -kernel arch/x86/boot/bzImage -hda ~/411os.img -append "root=/dev/sda console=ttyS0" -serial stdio
+
+Where 411os.img is the file we built in the first half of this write up. One thing to note is which kernel we are passing to qemu. Using the -kernel parameter I passed the kernel I just compiled that is stored in the (kernel root directory)/arch/x86/boot/bzImage. Here is an explaination of some of the options used (all taken from the qemu man pages).
+
+	man qemu <--- use this if you have more questions about options
+	-S Do not start CPU at startup (you must type 'c' in the monitor).
+	-s Shorthand for -gdb tcp::1234, i.e. open a gdbserver on TCP port
+           1234.
+	-kernel bzImage
+           Use bzImage as kernel image. The kernel can be either a Linux
+           kernel or in multiboot format.
+	-serial dev
+           Redirect the virtual serial port to host character device dev. The
+           default device is "vc" in graphical mode and "stdio" in non
+           graphical mode.
+	-append cmdline
+           Use cmdline as kernel command line. (remember, qemu is doing the job that grub and lilo usually do).
+
+_One thing that I'm not quite sure about is how qemu decides to virualize the root device as /dev/sda/. It probably has something to do with the -hda option, but kernel boot protocols and qemu's virtualization are quite magical._
+
+If everything went well when you ran the previous command you should be confronted with a new X11 window and a little bit of output in the terminal where you ran the command. If you used the -S option, qemu is now waiting for you to connect to it's gdbserver and tell it to continue execution. Let's do that.
+
+First, start gdb with the correct kernel containing debugging info.
+
+	gdb vmlinux
+
+You should see the following message:
+
+	Reading symbols from /home/uberj/K_stuff/linux-3.0.y/vmlinux...done.
+
+Not go ahead and connect to the qemu gdbserver.
+
+	target remote localhost:1234
+
+You should now be all set up. Just to test, set a break point as some function (like schedule) and type 'c' (continue). Here is an example of what it should look like when things work.
+
+	(gdb) b schedule
+	Breakpoint 1 at 0xc13ba4fb: file kernel/sched.c, line 4286.
+	(gdb) target remote :1234
+	Remote debugging using :1234
+	0x0000fff0 in ?? ()
+	(gdb) c
+	Continuing.
+
+	Breakpoint 1, schedule () at kernel/sched.c:4248
+
+
+Happy hacking!
+
+gdb stuff
+http://dc0d32.blogspot.com/2010/03/debugging-kernel-with-qemu-aynd-gdb.html
+http://knol.google.com/k/aseem-sethi/debugging-linux-with-qemu-gdb/29fizhrip655z/17#
+unmount the lofi - I called it hdd.img
+sudo qemu -kernel /boot/vmlinuz-backup -hda hdd.img -append "root=/dev/sda console=ttyS0" -serial stdio
+
+qemu -s -S -kernel /usr/src/linux/arch/x86/boot/bzImage -hda 411os.img -append "root=/dev/sda console=ttyS0" -serial stdio
+
+
+
+
+
+[kernelfiles]:http://oss.sgi.com/LDP/HOWTO/Kernel-HOWTO/kernel_files_info.html
