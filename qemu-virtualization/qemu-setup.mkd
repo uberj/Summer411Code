@@ -41,7 +41,7 @@ First check for an available loop back device. These are stored in /dev/ and hav
 	glug uberj # losetup /dev/loop0
 	loop: can't get info on device /dev/loop0: No such device or address
 
-If you see the above output then that device is *not* being used (a good thing). If you see a message saying the device is busy or in use try loop1 then 1oop2, loop3, etc.
+If you see the above output then that device is *not* being used (a good thing). If you see a message saying the device is busy or in use try loop1 then loop2, loop3, etc.
 
 If you can't get an available device, cross your fingers and run:
 	
@@ -156,7 +156,7 @@ You should see the following message:
 
 	Reading symbols from /home/uberj/K_stuff/linux-3.0.y/vmlinux...done.
 
-Not go ahead and connect to the qemu gdbserver.
+Now go ahead and connect to the qemu gdbserver.
 
 	target remote localhost:1234
 
