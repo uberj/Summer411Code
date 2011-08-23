@@ -50,7 +50,7 @@ Once you find a loopback device, bind the file you made to the device:
 
 To check to see whether the above command was successful check the return value by echoing a built in bash variable, 0 means success.
 
-	echo $
+	echo $?
 
 Before we can mount the device we need to format the disk with a file system. Any of the ext's will work, I chose ext2 for size reasons. To format the file use the mkfs or mkfs.ext2 utilities.
 
@@ -71,7 +71,7 @@ Now mount the device.
 
 Check your mounted file systems to make sure things went well.
 
-	df -u
+	df -h
 
 You should see a line showing your loop back device and mount point:
 
@@ -80,9 +80,11 @@ You should see a line showing your loop back device and mount point:
 Setting up the disk.
 --------------------
 This part is really easy. Download a stage3 tar ball from gentoo.osuosl.org and untar while in the root of your device.
+Change <release-date> according to whats available at http://gentoo.osuosl.org/releases/x86/current-stage3/
 
 	cd /mnt/vmd
-	tar xjf stage3-i686-20110802.tar.bz2
+	wget http://gentoo.osuosl.org/releases/x86/current-stage3/stage3-i686-<release-date>.tar.bz2
+	tar xjf stage3-i686-<release-date>.tar.bz2
 
 You should now have the bare essentials to boot your kernel and interact with a functioning system.
 
@@ -97,7 +99,7 @@ Unmount your file system and disassociate the disk image from the loop back devi
 Compiling your kernel
 ---------------------
 
-To be able to actually debug your kernel you are going to need to have special kernel options enabled. Specifically make sure that both of the following options are enabled.
+To be able to actually debug your kernel you are going to need to have special kernel options enabled. Specifically make sure that both of the following options are enabled in the .config file.
 	
 	CONFIG_DEBUG_INFO=y
 	CONFIG_DEBUG_KERNEL=y
@@ -105,7 +107,9 @@ To be able to actually debug your kernel you are going to need to have special k
 If you don't like manually editing the kernel .config file, go ahead and use the `make menuconfig` utility.
 
      Location:                                                                                         
-       -> Kernel hacking  (You will find the needed options in this subtree.) 
+       -> Kernel hacking
+         -> Kernel Debugging
+         -> Compile the kernel with debug info
 
 At this point your kernel should be set up with the correct options to have debugging symbols built into it. Go ahead and build the kernel.
                               
