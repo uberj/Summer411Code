@@ -4,10 +4,10 @@ LINUX Debugging using QEMU
 The goal of this entry is to explain how to use qemu and gdb to trace and step through the execution of the linux kernel in real time. This can be useful for learning the flow of execution and debugging high level code in the kernel (like scheduling and memory management).
 
 For debugging kernel code you will need:
-* kernel source tree - if you plan to hack on the code I recommend cloning a tree using git at kernel.org. For this example I used the 2.6.39 kernel. _3.0.4 works too :)_
-* qemu - You are going to need to compile this or get it from your distribution's repository. Google "How to install qemu" if you get stuck at this step.
-* gdb
-* gentoo stage3 tar ball - This is used for populating the virtual partition. Note that gentoo's stage3 isn't necessarily the only solution. I just found it an easy way to populate the root file system.
+	* kernel source tree - if you plan to hack on the code I recommend cloning a tree using git at kernel.org. For this example I used the 2.6.39 kernel. _3.0.4 works too :)_
+	* qemu - You are going to need to compile this or get it from your distribution's repository. Google "How to install qemu" if you get stuck at this step.
+	* gdb
+	* gentoo stage3 tar ball - This is used for populating the virtual partition. Note that gentoo's stage3 isn't necessarily the only solution. I just found it an easy way to populate the root file system.
 
 The root file system (rootfs).
 ------------------------------
