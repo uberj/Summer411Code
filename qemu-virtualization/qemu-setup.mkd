@@ -80,7 +80,7 @@ You should see a line showing your loop back device and mount point:
 Setting up the disk.
 --------------------
 This part is really easy. Download a stage3 tar ball from gentoo.osuosl.org and untar while in the root of your device.
-Change <release-date> according to whats available at http://gentoo.osuosl.org/releases/x86/current-stage3/
+Change &lt;release-date> according to whats available at http://gentoo.osuosl.org/releases/x86/current-stage3/
 
 	cd /mnt/vmd
 	wget http://gentoo.osuosl.org/releases/x86/current-stage3/stage3-i686-<release-date>.tar.bz2
