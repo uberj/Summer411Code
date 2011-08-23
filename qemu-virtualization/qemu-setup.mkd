@@ -174,17 +174,3 @@ You should now be all set up. Just to test, set a break point as some function (
 
 
 Happy hacking!
-
-gdb stuff
-http://dc0d32.blogspot.com/2010/03/debugging-kernel-with-qemu-aynd-gdb.html
-http://knol.google.com/k/aseem-sethi/debugging-linux-with-qemu-gdb/29fizhrip655z/17#
-unmount the lofi - I called it hdd.img
-sudo qemu -kernel /boot/vmlinuz-backup -hda hdd.img -append "root=/dev/sda console=ttyS0" -serial stdio
-
-qemu -s -S -kernel /usr/src/linux/arch/x86/boot/bzImage -hda 411os.img -append "root=/dev/sda console=ttyS0" -serial stdio
-
-
-
-
-
-[kernelfiles]:http://oss.sgi.com/LDP/HOWTO/Kernel-HOWTO/kernel_files_info.html
