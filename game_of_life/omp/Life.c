@@ -104,7 +104,7 @@ void eval_rules (struct life_t * life)
 	int ** grid      = life->grid;
 	int ** next_grid = life->next_grid;
 
-	#pragma omp parallel for private(neighbors,j,k,l)
+	#pragma omp parallel for private(neighbors,i,j,k,l)
 	for (i = 1; i <= ncols; i++) {
 		for (j = 1; j <= nrows; j++) {
 			neighbors = 0;
@@ -325,7 +325,7 @@ void randomize_grid (struct life_t * life, double prob)
 	int nrows = life->nrows;
 
 	#pragma omp parallel for private(i,j)
-	for (i = 1; i <= ncols; i++) {
+	for (i = 1; i <= ncols; i++) {          
 		for (j = 1; j <= nrows; j++) {
 			if (rand_double() < prob)
 				life->grid[i][j] = ALIVE;

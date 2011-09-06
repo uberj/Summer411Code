@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
 		printf("Thread %d starting...\n",tid);
 
 		#pragma omp for schedule(dynamic, chunk)
-		for(i = 3; i < ubound; i++){
+		for(i = 3; i < ubound; i += 2){
 			test = (int)sqrt((double)i);
 			for(j = 2; j <= test; j++){
 				if(i % j == 0){

@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define TRUE 1
+#define FALSE 0
+
 int NUM_THREADS;
 int UBOUND; 
 
@@ -12,20 +15,21 @@ pthread_mutex_t mutexsum;
 
 void *findPrime(void *param)
 {
-	int i, j, test, tid, runningCount = 0;
+	int i, j, test, tid, isprime = TRUE;
+	int runningCount = 0;
 	tid = (int)param;
 
      	for(i = (2 * tid) + 3; i < UBOUND; i += (2 * NUM_THREADS)){
 		test = (int)sqrt((double)i);
 		for(j = 2; j <= test; j++){
 			if(i % j == 0){
-				runningCount--;
+				isprime = FALSE;
 				break;
 			}
 		}
-		if(i != UBOUND){
+		if(isprime)
 			runningCount++;
-		}
+		isprime = TRUE;
 	}
 	pthread_mutex_lock(&mutexsum);
 	kPrimeCount += runningCount;

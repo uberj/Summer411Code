@@ -7,7 +7,7 @@
  *The Shodor Education Foundation, Inc.    *
  *                                         *
  *Updated 2010, Tiago Sommer Damasceno and *
- * The Shodor Education Foundation, Inc.   *
+ * The Shodor Education Foundation, Inc.   * 
  *                                         *
  *setupWindow modified from the tutorial on*
  *http://tronche.com/gui/x/xlib-tutorial/  *
@@ -15,7 +15,7 @@
  *******************************************/
 #include "Life.h"
 #include <stdio.h> 
-#include <stdlib.h>  
+#include <stdlib.h>
 
 void free_video(struct life_t * life) 
 {
@@ -144,6 +144,8 @@ void do_draw(struct life_t * life)
 	int rank_x      = 12; // X coordinate for rank display
 	int rank_y      = 23; // Y coordinate for rank display
 
+	int cell;
+
 	sprintf(string,"%d", rank);
 
 	XSetForeground(d->dpy, d->gc, d->deadColor);
@@ -157,7 +159,7 @@ void do_draw(struct life_t * life)
 			y1 = (j-1)/(nrows+1) * d->height;
 
 			if (life->grid[i][j] >= ALIVE) {
-				int cell = life->grid[i][j];
+				cell = life->grid[i][j];
 				if (cell>NUM_GRAYSCALE-1) cell=NUM_GRAYSCALE-1;
 				XSetForeground(d->dpy, d->gc, d->Xgrayscale[cell].pixel);
 			} else {

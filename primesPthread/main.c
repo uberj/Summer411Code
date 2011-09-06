@@ -4,7 +4,7 @@
 #include <time.h>
 #include <pthread.h>
 #include "primes.h"
-#define NUM_THREADS 8
+#define NUM_THREADS 2
 
 void print_results(struct Data *data){
 	int i, size;
@@ -24,6 +24,7 @@ int main (int argc, const char *argv[]) {
 	startTime = time(NULL);
 	data->lock = 0;
 	for(i = 2; i <= upperBound; i++){
+		printf("%d\n", i);
 		while(data->lock == 1) ;
 		data->lock++;
 		data->tested = i;

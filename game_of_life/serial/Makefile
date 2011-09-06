@@ -13,7 +13,7 @@
 
 # NO_X11 = 1
 
-CC        = gcc
+CC        = gcc -O3
 
 LIBS     += -lm
 CFLAGS   += 
