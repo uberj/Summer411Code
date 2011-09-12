@@ -115,6 +115,12 @@ If you don't like manually editing the kernel .config file, go ahead and use the
        -> Kernel hacking
          -> Kernel Debugging
          -> Compile the kernel with debug info
+         
+Also, make sure that ext2 support has been enabled.
+
+     Location:
+       -> File systems
+         -> Second extended fs support
 
 At this point your kernel should be set up with the correct options to have debugging symbols built into it. Go ahead and build the kernel.
                               
